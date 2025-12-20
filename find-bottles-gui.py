@@ -648,94 +648,139 @@ class BottleManagerGUI(QMainWindow):
     
     def apply_fix(self):
         """Apply the media foundation fix."""
-        if not self.selected_bottle_path or not self.fp82_exe_path:
-            QMessageBox.warning(self, "Missing Information", "Please select a bottle and Futureport82 executable.")
-            return
-        
-        # Get the script path (handle both development and bundled app cases)
-        fix_script = resource_path("mf-fix-cx.sh")
-        
-        # Make sure script is executable
-        if os.path.exists(fix_script):
-            os.chmod(fix_script, 0o755)
-        else:
-            QMessageBox.critical(
-                self,
-                "Script Not Found",
-                f"Fix script not found at:\n{fix_script}\n\nPlease ensure mf-fix-cx.sh is bundled with the app."
-            )
-            return
-        
-        # Verify required resources exist (for bundled app)
-        script_dir = os.path.dirname(fix_script)
-        required_files = ["system32", "syswow64", "mf.reg", "wmf.reg", "mfplat.dll"]
-        missing_files = []
-        for req_file in required_files:
-            req_path = os.path.join(script_dir, req_file)
-            if not os.path.exists(req_path):
-                missing_files.append(req_file)
-        
-        if missing_files:
-            QMessageBox.critical(
-                self,
-                "Missing Resources",
-                f"The following required files are missing:\n{', '.join(missing_files)}\n\n"
-                f"Expected location: {script_dir}\n\n"
-                f"This may indicate a problem with the app bundle."
-            )
-            return
-        
-        # Confirm before proceeding
-        reply = QMessageBox.question(
-            self,
-            "Confirm Fix",
-            f"Apply media foundation fix to:\n\n"
-            f"Bottle: {self.selected_bottle}\n"
-            f"Executable: {self.fp82_exe_path}\n\n"
-            f"⚠️ IMPORTANT: During the fix, CrossOver may show 'OK' dialogs.\n"
-            f"   Watch the dock and click the CrossOver icon to dismiss them.\n\n"
-            f"This may require administrator privileges.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.Yes
-        )
-        
-        if reply == QMessageBox.StandardButton.Yes:
-            # Prompt for administrator password using QInputDialog
-            # In PyQt6, getText signature is: getText(parent, title, label, echo=Normal, text="")
-            password, ok = QInputDialog.getText(
-                self,
-                "Administrator Password Required",
-                "This operation requires administrator privileges.\n\nEnter your password:",
-                echo=QLineEdit.EchoMode.Password
-            )
-            
-            if not ok or not password:
-                self.statusBar().showMessage("Fix cancelled by user")
+        try:
+            if not self.selected_bottle_path or not self.fp82_exe_path:
+                QMessageBox.warning(self, "Missing Information", "Please select a bottle and Futureport82 executable.")
                 return
             
-            self.apply_fix_btn.setEnabled(False)
-            self.statusBar().showMessage("Applying fix...")
-            self.output_text.clear()
-            self.output_text.append("Starting media foundation fix...\n")
-            self.output_text.append(f"Bottle: {self.selected_bottle_path}\n")
-            self.output_text.append(f"Executable: {self.fp82_exe_path}\n\n")
+            # Get the script path (handle both development and bundled app cases)
+            try:
+                fix_script = resource_path("mf-fix-cx.sh")
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    f"Failed to locate fix script:\n{e}\n\nPlease ensure mf-fix-cx.sh is bundled with the app."
+                )
+                return
             
-            # Run fix in worker thread with password and add_to_bottle option
-            add_to_bottle = self.add_to_bottle_checkbox.isChecked()
-            self.worker = FixWorker(fix_script, self.fp82_exe_path, self.selected_bottle_path, password, add_to_bottle)
-            self.worker.output.connect(self.output_text.append)
-            self.worker.finished.connect(self.on_fix_finished)
-            self.worker.start()
+            # Make sure script is executable
+            if os.path.exists(fix_script):
+                try:
+                    os.chmod(fix_script, 0o755)
+                except Exception as e:
+                    QMessageBox.warning(
+                        self,
+                        "Warning",
+                        f"Could not make script executable: {e}\n\nContinuing anyway..."
+                    )
+            else:
+                QMessageBox.critical(
+                    self,
+                    "Script Not Found",
+                    f"Fix script not found at:\n{fix_script}\n\nPlease ensure mf-fix-cx.sh is bundled with the app."
+                )
+                return
+            
+            # Verify required resources exist (for bundled app)
+            script_dir = os.path.dirname(fix_script)
+            required_files = ["system32", "syswow64", "mf.reg", "wmf.reg", "mfplat.dll"]
+            missing_files = []
+            for req_file in required_files:
+                req_path = os.path.join(script_dir, req_file)
+                if not os.path.exists(req_path):
+                    missing_files.append(req_file)
+            
+            if missing_files:
+                QMessageBox.critical(
+                    self,
+                    "Missing Resources",
+                    f"The following required files are missing:\n{', '.join(missing_files)}\n\n"
+                    f"Expected location: {script_dir}\n\n"
+                    f"This may indicate a problem with the app bundle."
+                )
+                return
+            
+            # Confirm before proceeding
+            reply = QMessageBox.question(
+                self,
+                "Confirm Fix",
+                f"Apply media foundation fix to:\n\n"
+                f"Bottle: {self.selected_bottle}\n"
+                f"Executable: {self.fp82_exe_path}\n\n"
+                f"⚠️ IMPORTANT: During the fix, CrossOver may show 'OK' dialogs.\n"
+                f"   Watch the dock and click the CrossOver icon to dismiss them.\n\n"
+                f"This may require administrator privileges.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                # Prompt for administrator password using QInputDialog
+                # In PyQt6, getText signature is: getText(parent, title, label, echo=Normal, text="")
+                password, ok = QInputDialog.getText(
+                    self,
+                    "Administrator Password Required",
+                    "This operation requires administrator privileges.\n\nEnter your password:",
+                    echo=QLineEdit.EchoMode.Password
+                )
+                
+                if not ok or not password:
+                    self.statusBar().showMessage("Fix cancelled by user")
+                    return
+                
+                self.apply_fix_btn.setEnabled(False)
+                self.statusBar().showMessage("Applying fix...")
+                self.output_text.clear()
+                self.output_text.append("Starting media foundation fix...\n")
+                self.output_text.append(f"Bottle: {self.selected_bottle_path}\n")
+                self.output_text.append(f"Executable: {self.fp82_exe_path}\n\n")
+                
+                # Run fix in worker thread with password and add_to_bottle option
+                try:
+                    add_to_bottle = self.add_to_bottle_checkbox.isChecked()
+                    self.worker = FixWorker(fix_script, self.fp82_exe_path, self.selected_bottle_path, password, add_to_bottle)
+                    self.worker.output.connect(self.output_text.append)
+                    self.worker.finished.connect(self.on_fix_finished)
+                    self.worker.start()
+                except Exception as e:
+                    import traceback
+                    error_details = traceback.format_exc()
+                    QMessageBox.critical(
+                        self,
+                        "Error Starting Fix",
+                        f"Failed to start fix process:\n{e}\n\n{error_details}"
+                    )
+                    self.apply_fix_btn.setEnabled(True)
+                    self.statusBar().showMessage("Failed to start fix")
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            QMessageBox.critical(
+                self,
+                "Unexpected Error",
+                f"An unexpected error occurred:\n{e}\n\n{error_details}"
+            )
+            self.apply_fix_btn.setEnabled(True)
+            self.statusBar().showMessage("Error occurred")
     
     def on_fix_finished(self, success: bool, message: str):
         """Handle fix completion."""
-        self.apply_fix_btn.setEnabled(True)
-        if success:
-            self.statusBar().showMessage("Fix completed successfully!")
-            QMessageBox.information(self, "Success", message)
-        else:
-            self.statusBar().showMessage("Fix failed")
-            QMessageBox.critical(self, "Error", message)
+        try:
+            self.apply_fix_btn.setEnabled(True)
+            if success:
+                self.statusBar().showMessage("Fix completed successfully!")
+                QMessageBox.information(self, "Success", message)
+            else:
+                self.statusBar().showMessage("Fix failed")
+                QMessageBox.critical(self, "Error", message)
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            # Use a simple print to avoid potential recursive issues
+            print(f"Error in on_fix_finished: {e}\n{error_details}")
+            self.apply_fix_btn.setEnabled(True)
+            self.statusBar().showMessage("Error handling fix completion")
 
 
 def main():
