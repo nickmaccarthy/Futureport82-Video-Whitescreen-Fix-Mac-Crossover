@@ -18,9 +18,9 @@ The fixes for this work are inspired by [HoodedDeath's MF Fix](https://github.co
 
 Watch this video for a complete walkthrough of the setup process:
 
-https://user-images.githubusercontent.com/raw/main/screenshots/setup-video-fast.mp4
+[![Setup Video](screenshots/main-window.png)](screenshots/setup-video-fast.mp4)
 
-Or [download the video directly](screenshots/setup-video-fast.mp4).
+Click the image above or [download the video directly](screenshots/setup-video-fast.mp4).
 
 ### Step-by-Step Instructions
 
