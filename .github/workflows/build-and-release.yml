@@ -1,0 +1,123 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build:
+    runs-on: macos-14  # macOS 14 (Sonoma) with Apple Silicon
+    permissions:
+      contents: write  # Required for creating releases
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt
+          pip3 install pyinstaller
+      
+      - name: Make build script executable
+        run: chmod +x build-app.sh
+      
+      - name: Build application
+        run: ./build-app.sh
+      
+      - name: Verify app bundle
+        run: |
+          if [ ! -d "Futureport82Fixer.app" ]; then
+            echo "Error: Futureport82Fixer.app not found"
+            exit 1
+          fi
+          echo "App bundle created successfully"
+      
+      - name: Create DMG
+        run: |
+          hdiutil create -volname "Futureport82Fixer" \
+            -srcfolder "Futureport82Fixer.app" \
+            -ov -format UDZO \
+            "Futureport82Fixer.dmg"
+      
+      - name: Get version from tag
+        id: get_version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Get version from commit
+        id: get_version_commit
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        run: |
+          VERSION=$(date +'%Y%m%d')-$(echo $GITHUB_SHA | cut -c1-7)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+      
+      - name: Rename DMG with version
+        run: |
+          if [ -f "Futureport82Fixer.dmg" ]; then
+            if [ -n "${{ steps.get_version.outputs.version }}" ]; then
+              VERSION="${{ steps.get_version.outputs.version }}"
+            else
+              VERSION="${{ steps.get_version_commit.outputs.version }}"
+            fi
+            mv "Futureport82Fixer.dmg" "Futureport82Fixer-${VERSION}.dmg"
+            echo "DMG renamed to Futureport82Fixer-${VERSION}.dmg"
+          fi
+      
+      - name: Create app bundle zip
+        run: |
+          if [ -d "Futureport82Fixer.app" ]; then
+            if [ -n "${{ steps.get_version.outputs.version }}" ]; then
+              VERSION="${{ steps.get_version.outputs.version }}"
+            else
+              VERSION="${{ steps.get_version_commit.outputs.version }}"
+            fi
+            zip -r "Futureport82Fixer-${VERSION}.zip" "Futureport82Fixer.app"
+            echo "App bundle zipped to Futureport82Fixer-${VERSION}.zip"
+          fi
+      
+      - name: Upload app bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Futureport82Fixer-app
+          path: Futureport82Fixer.app
+          retention-days: 30
+      
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Futureport82Fixer-dmg
+          path: |
+            Futureport82Fixer.dmg
+            Futureport82Fixer-*.dmg
+          if-no-files-found: ignore
+          retention-days: 30
+      
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Futureport82Fixer-*.dmg
+            Futureport82Fixer-*.zip
+          draft: false
+          prerelease: false
+          generate_notes: true
+          draft: false
+          prerelease: false
+          generate_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
