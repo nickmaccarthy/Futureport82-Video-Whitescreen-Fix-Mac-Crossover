@@ -16,37 +16,33 @@ The fixes for this work are inspired by [HoodedDeath's MF Fix](https://github.co
 
 ## Quick Start Guide
 
-### Step 1: Launch the Application
+Watch this video for a complete walkthrough of the setup process:
+
+https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/raw/main/screenshots/setup-video-fast.mp4
+
+### Step-by-Step Instructions
+
+**Step 1: Launch the Application**
 
 Launch `Futureport82Fixer.app` or run `python3 find-bottles-gui.py` to open the main window.
 
-![Main Window](screenshots/main-window.png)
-
-### Step 2: Select or Create a Bottle
+**Step 2: Select or Create a Bottle**
 
 Choose an existing CrossOver bottle from the list, or click "Create New Bottle" to create a new one.
 
-![Bottle Selection](screenshots/bottle-selection.png)
-
-### Step 3: Select Futureport82 Executable
+**Step 3: Select Futureport82 Executable**
 
 Click "Browse..." and navigate to your Futureport82 executable file (or its directory).
 
-![Executable Selection](screenshots/executable-selection.png)
-
-### Step 4: Apply the Fix
+**Step 4: Apply the Fix**
 
 Click "Apply Media Foundation Fix" and enter your administrator password when prompted. The fix will run automatically and show progress in the output window.
 
-![Applying Fix](screenshots/applying-fix.png)
-
 **⚠️ Important**: During the fix process, CrossOver may show 'OK' dialogs in the dock. Click the CrossOver icon to see and dismiss them.
 
-### Step 5: Done!
+**Step 5: Done!**
 
 Once the fix completes successfully, your Futureport82 installation should work properly with video playback. You can now launch Futureport82 from CrossOver.
-
-![Fix Complete](screenshots/fix-complete.png)
 
 ## Requirements
 
