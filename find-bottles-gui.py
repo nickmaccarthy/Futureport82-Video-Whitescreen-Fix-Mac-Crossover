@@ -332,6 +332,19 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+def get_version():
+    """Get the application version from VERSION.md file."""
+    try:
+        version_file = resource_path("VERSION.md")
+        if os.path.exists(version_file):
+            with open(version_file, 'r') as f:
+                version = f.read().strip()
+                return version
+    except Exception:
+        pass
+    return "dev"
+
+
 class BottleManagerGUI(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -346,7 +359,8 @@ class BottleManagerGUI(QMainWindow):
     
     def init_ui(self):
         """Initialize the user interface."""
-        self.setWindowTitle("Futureport82 CrossOver Bottle Fixer")
+        version = get_version()
+        self.setWindowTitle(f"Futureport82 CrossOver Bottle Fixer v{version}")
         self.setMinimumSize(700, 600)
         
         # Central widget
@@ -357,6 +371,7 @@ class BottleManagerGUI(QMainWindow):
         main_layout.setContentsMargins(20, 20, 20, 20)
         
         # Title
+        version = get_version()
         title = QLabel("Futureport82 CrossOver Bottle Fixer")
         title_font = QFont()
         title_font.setPointSize(18)
@@ -364,6 +379,15 @@ class BottleManagerGUI(QMainWindow):
         title.setFont(title_font)
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title)
+        
+        # Version label
+        version_label = QLabel(f"Version {version}")
+        version_font = QFont()
+        version_font.setPointSize(10)
+        version_label.setFont(version_font)
+        version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        version_label.setStyleSheet("color: #666;")
+        main_layout.addWidget(version_label)
         
         # CrossOver status
         self.crossover_status = QLabel("Checking for CrossOver...")
@@ -454,8 +478,9 @@ class BottleManagerGUI(QMainWindow):
         self.apply_fix_btn.setEnabled(False)
         main_layout.addWidget(self.apply_fix_btn)
         
-        # Status bar
-        self.statusBar().showMessage("Ready")
+        # Status bar with version
+        version = get_version()
+        self.statusBar().showMessage(f"Ready - Version {version}")
     
     def find_crossover(self):
         """Find the CrossOver application."""

@@ -5,7 +5,7 @@ a = Analysis(
     ['find-bottles-gui.py'],
     pathex=[],
     binaries=[],
-    datas=[('system32', 'system32'), ('syswow64', 'syswow64'), ('mf-fix-cx.sh', '.'), ('mf.reg', '.'), ('wmf.reg', '.'), ('mfplat.dll', '.')],
+    datas=[('system32', 'system32'), ('syswow64', 'syswow64'), ('mf-fix-cx.sh', '.'), ('mf.reg', '.'), ('wmf.reg', '.'), ('mfplat.dll', '.'), ('VERSION.md', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
