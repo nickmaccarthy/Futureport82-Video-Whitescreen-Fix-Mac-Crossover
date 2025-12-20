@@ -1,4 +1,4 @@
-# Futureport82 CrossOver Bottle Fixer
+# Futureport82 Whitescreen Video Fixer for Mac's running Crossover
 
 A macOS application that fixes CrossOver bottles to work with Futureport82's media foundation requirements. This fixes the "White Screen" issue a Mac user will see when viewing any video screen in Futureport82.  
 
