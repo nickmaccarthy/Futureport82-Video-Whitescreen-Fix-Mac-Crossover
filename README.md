@@ -16,6 +16,12 @@ The fixes for this work are inspired by [HoodedDeath's MF Fix](https://github.co
 
 ## Quick Start Guide
 
+### Download and Install
+
+1. Download the [latest release](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/releases/latest)
+2. Open the downloaded DMG file
+3. Drag `Futureport82Fixer.app` to your Applications folder (or run it directly from the DMG)
+
 ### Step 1: Watch the Setup Process
 
 Here's a quick animated guide showing the complete setup process:
