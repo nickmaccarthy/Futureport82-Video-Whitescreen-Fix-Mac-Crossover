@@ -18,7 +18,9 @@ The fixes for this work are inspired by [HoodedDeath's MF Fix](https://github.co
 
 Watch this video for a complete walkthrough of the setup process:
 
-https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/raw/main/screenshots/setup-video-fast.mp4
+https://user-images.githubusercontent.com/raw/main/screenshots/setup-video-fast.mp4
+
+Or [download the video directly](screenshots/setup-video-fast.mp4).
 
 ### Step-by-Step Instructions
 
@@ -26,13 +28,19 @@ https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossove
 
 Launch `Futureport82Fixer.app` or run `python3 find-bottles-gui.py` to open the main window.
 
+![Main Window](screenshots/main-window.png)
+
 **Step 2: Select or Create a Bottle**
 
 Choose an existing CrossOver bottle from the list, or click "Create New Bottle" to create a new one.
 
+![Bottle Selection](screenshots/bottle-selection.png)
+
 **Step 3: Select Futureport82 Executable**
 
 Click "Browse..." and navigate to your Futureport82 executable file (or its directory).
+
+![Executable Selection](screenshots/executable-selection.png)
 
 **Step 4: Apply the Fix**
 
