@@ -61,6 +61,14 @@ Once the fix completes successfully, your Futureport82 installation should work 
 
 Download the latest release from the [Releases](https://github.com/YOUR_USERNAME/fp82-mac-fix/releases) page and open `Futureport82Fixer.app`.
 
+**⚠️ Security Warning**: macOS may show a warning that the app "cannot be verified" when you first open it. This is normal for unsigned apps. To open it:
+
+1. Right-click (or Control-click) on `Futureport82Fixer.app`
+2. Select "Open" from the context menu
+3. Click "Open" in the security dialog
+
+Alternatively, go to **System Settings > Privacy & Security** and click "Open Anyway" next to the blocked app message.
+
 ### Option 2: Build from Source
 
 1. Clone this repository:
@@ -144,6 +152,7 @@ All fixes are applied automatically with a single click.
 
 ## Troubleshooting
 
+- **"App cannot be verified" warning**: See the [Security Warning](#option-1-download-pre-built-app) section above for instructions on how to open the app
 - **CrossOver not found**: Ensure CrossOver is installed at `/Applications/CrossOver.app`
 - **Permission errors**: The fix script requires administrator privileges to modify system DLLs
 - **Script not found**: Ensure `mf-fix-cx.sh` is in the same directory as the application

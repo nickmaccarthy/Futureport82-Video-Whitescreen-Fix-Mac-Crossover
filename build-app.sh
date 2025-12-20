@@ -76,6 +76,16 @@ ${PYINSTALLER_CMD} \
 if [ -d "${DIST_DIR}/${APP_BUNDLE}" ]; then
     mv "${DIST_DIR}/${APP_BUNDLE}" .
     echo "App bundle created: ${APP_BUNDLE}"
+    
+    # Attempt ad-hoc code signing (free, but may still show warning)
+    echo "Signing app bundle..."
+    if codesign --force --deep --sign - "${APP_BUNDLE}" 2>/dev/null; then
+        echo "✓ App signed with ad-hoc signature"
+    else
+        echo "⚠ Warning: Could not sign app. Users may see a security warning."
+        echo "  To sign properly, you need an Apple Developer ID certificate."
+    fi
+    
     echo ""
     echo "To distribute:"
     echo "  1. Test the app: open ${APP_BUNDLE}"

@@ -41,6 +41,12 @@ jobs:
           fi
           echo "App bundle created successfully"
       
+      - name: Sign app bundle (ad-hoc)
+        run: |
+          echo "Signing app bundle with ad-hoc signature..."
+          codesign --force --deep --sign - "Futureport82Fixer.app" || echo "Warning: Ad-hoc signing failed, app may show security warning"
+          codesign --verify --verbose "Futureport82Fixer.app" || echo "Warning: Code signature verification failed"
+      
       - name: Create DMG
         run: |
           hdiutil create -volname "Futureport82Fixer" \
