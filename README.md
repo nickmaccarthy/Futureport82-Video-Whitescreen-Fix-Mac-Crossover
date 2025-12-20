@@ -16,39 +16,37 @@ The fixes for this work are inspired by [HoodedDeath's MF Fix](https://github.co
 
 ## Quick Start Guide
 
-Watch this video for a complete walkthrough of the setup process:
+### Step 1: Watch the Setup Process
 
-**📹 [Download Setup Video (MP4)](screenshots/setup-video-fast.mp4)** - Right-click and "Save As" to download, or click to view in browser
+Here's a quick animated guide showing the complete setup process:
 
-*Note: GitHub doesn't support inline video playback in READMEs. Download the video to watch it.*
+![Setup Process](screenshots/setup-video.gif)
 
-### Step-by-Step Instructions
-
-**Step 1: Launch the Application**
+**Step 2: Launch the Application**
 
 Launch `Futureport82Fixer.app` or run `python3 find-bottles-gui.py` to open the main window.
 
 ![Main Window](screenshots/main-window.png)
 
-**Step 2: Select or Create a Bottle**
+**Step 3: Select or Create a Bottle**
 
 Choose an existing CrossOver bottle from the list, or click "Create New Bottle" to create a new one.
 
 ![Bottle Selection](screenshots/bottle-selection.png)
 
-**Step 3: Select Futureport82 Executable**
+**Step 4: Select Futureport82 Executable**
 
 Click "Browse..." and navigate to your Futureport82 executable file (or its directory).
 
 ![Executable Selection](screenshots/executable-selection.png)
 
-**Step 4: Apply the Fix**
+**Step 5: Apply the Fix**
 
 Click "Apply Media Foundation Fix" and enter your administrator password when prompted. The fix will run automatically and show progress in the output window.
 
 **⚠️ Important**: During the fix process, CrossOver may show 'OK' dialogs in the dock. Click the CrossOver icon to see and dismiss them.
 
-**Step 5: Done!**
+**Step 6: Done!**
 
 Once the fix completes successfully, your Futureport82 installation should work properly with video playback. You can now launch Futureport82 from CrossOver.
 
