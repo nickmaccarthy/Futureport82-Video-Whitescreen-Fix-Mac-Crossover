@@ -32,10 +32,18 @@ class FixWorker(QThread):
     def run(self):
         try:
             self.output.emit("Running fix script...\n")
+            self.output.emit(f"Script path: {self.script_path}\n")
             self.output.emit("\n⚠️  IMPORTANT: Watch for CrossOver dialogs!\n")
             self.output.emit("   During the fix, CrossOver may show 'OK' dialogs in the dock.\n")
             self.output.emit("   Click on the CrossOver icon in the dock to see and dismiss them.\n")
             self.output.emit("   These dialogs won't interrupt the process, but need to be dismissed.\n\n")
+            
+            # Verify script exists and is executable
+            if not os.path.exists(self.script_path):
+                error_msg = f"Script not found: {self.script_path}"
+                self.output.emit(f"Error: {error_msg}\n")
+                self.finished.emit(False, error_msg)
+                return
             
             # Set up environment with password if provided
             env = dict(os.environ, PYTHONUNBUFFERED='1')
@@ -45,8 +53,23 @@ class FixWorker(QThread):
             else:
                 self.output.emit("Note: Administrator privileges may be required.\n\n")
             
+            # Set the resource directory for the script (where DLLs and registry files are)
+            script_dir = os.path.dirname(self.script_path)
+            env['MF_FIX_RESOURCE_DIR'] = script_dir
+            self.output.emit(f"Resource directory: {script_dir}\n")
+            
+            # Verify required resources exist
+            required_resources = ["system32", "syswow64", "mf.reg", "wmf.reg", "mfplat.dll"]
+            missing = [r for r in required_resources if not os.path.exists(os.path.join(script_dir, r))]
+            if missing:
+                error_msg = f"Missing required resources: {', '.join(missing)} in {script_dir}"
+                self.output.emit(f"Error: {error_msg}\n")
+                self.finished.emit(False, error_msg)
+                return
+            
             # Use Popen for real-time output streaming
             # Run with bash explicitly and ensure script is executable
+            # Set cwd to script directory so relative paths work
             process = subprocess.Popen(
                 ["/bin/bash", self.script_path, "-e", self.exe_path, self.bottle_dir],
                 stdout=subprocess.PIPE,
@@ -54,7 +77,8 @@ class FixWorker(QThread):
                 text=True,
                 bufsize=1,  # Line buffered
                 universal_newlines=True,
-                env=env
+                env=env,
+                cwd=script_dir
             )
             
             # Stream output in real-time
@@ -95,7 +119,8 @@ class FixWorker(QThread):
                         self.output.emit(line.strip() + "\n")
                         output_lines.append(line.strip())
             
-            # Get return code
+            # Wait for process to complete and get return code
+            process.wait()
             return_code = process.returncode
             
             if return_code == 0:
@@ -122,9 +147,11 @@ class FixWorker(QThread):
             self.output.emit(f"Error: {error_msg}\n")
             self.finished.emit(False, error_msg)
         except Exception as e:
-            error_msg = f"Unexpected error: {e}"
+            import traceback
+            error_details = traceback.format_exc()
+            error_msg = f"Unexpected error: {e}\n\n{error_details}"
             self.output.emit(f"Error: {error_msg}\n")
-            self.finished.emit(False, error_msg)
+            self.finished.emit(False, f"Unexpected error: {e}")
     
     def add_application_to_bottle(self):
         """Add the Futureport82.exe application to the CrossOver bottle."""
@@ -631,12 +658,30 @@ class BottleManagerGUI(QMainWindow):
         # Make sure script is executable
         if os.path.exists(fix_script):
             os.chmod(fix_script, 0o755)
-        
-        if not os.path.exists(fix_script):
+        else:
             QMessageBox.critical(
                 self,
                 "Script Not Found",
-                f"Fix script not found at:\n{fix_script}\n\nPlease ensure mf-fix-cx.sh is in the same directory."
+                f"Fix script not found at:\n{fix_script}\n\nPlease ensure mf-fix-cx.sh is bundled with the app."
+            )
+            return
+        
+        # Verify required resources exist (for bundled app)
+        script_dir = os.path.dirname(fix_script)
+        required_files = ["system32", "syswow64", "mf.reg", "wmf.reg", "mfplat.dll"]
+        missing_files = []
+        for req_file in required_files:
+            req_path = os.path.join(script_dir, req_file)
+            if not os.path.exists(req_path):
+                missing_files.append(req_file)
+        
+        if missing_files:
+            QMessageBox.critical(
+                self,
+                "Missing Resources",
+                f"The following required files are missing:\n{', '.join(missing_files)}\n\n"
+                f"Expected location: {script_dir}\n\n"
+                f"This may indicate a problem with the app bundle."
             )
             return
         
