@@ -689,16 +689,18 @@ class BottleManagerGUI(QMainWindow):
                 )
                 return
             
-            # Make sure script is executable
+            # Make sure script is executable (skip silently if in read-only location like App Translocation)
+            script_dir = os.path.dirname(fix_script)
             if os.path.exists(fix_script):
                 try:
-                    os.chmod(fix_script, 0o755)
-                except Exception as e:
-                    QMessageBox.warning(
-                        self,
-                        "Warning",
-                        f"Could not make script executable: {e}\n\nContinuing anyway..."
-                    )
+                    # Check if we can write to the directory before trying to chmod
+                    if os.access(script_dir, os.W_OK):
+                        os.chmod(fix_script, 0o755)
+                    # If in read-only location (App Translocation), bash can still execute the script
+                    # so we silently continue - no need to show an error or warning
+                except Exception:
+                    # Non-critical, bash can execute scripts even without executable bit
+                    pass
             else:
                 QMessageBox.critical(
                     self,
@@ -709,6 +711,21 @@ class BottleManagerGUI(QMainWindow):
             
             # Verify required resources exist (for bundled app)
             script_dir = os.path.dirname(fix_script)
+            
+            # Check if we're in App Translocation (read-only location)
+            if 'AppTranslocation' in fix_script:
+                reply = QMessageBox.warning(
+                    self,
+                    "App Translocation Detected",
+                    "The app is running from a read-only location (App Translocation).\n\n"
+                    "This can cause issues. It's recommended to move Futureport82Fixer.app\n"
+                    "to your Applications folder and run it from there.\n\n"
+                    "Would you like to continue anyway?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+                if reply == QMessageBox.StandardButton.No:
+                    return
             required_files = ["system32", "syswow64", "mf.reg", "wmf.reg", "mfplat.dll"]
             missing_files = []
             for req_file in required_files:

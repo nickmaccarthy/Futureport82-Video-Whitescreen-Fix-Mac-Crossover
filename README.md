@@ -59,7 +59,13 @@ Once the fix completes successfully, your Futureport82 installation should work 
 
 ### Option 1: Download Pre-built App
 
-Download the latest release from the [Releases](https://github.com/YOUR_USERNAME/fp82-mac-fix/releases) page and open `Futureport82Fixer.app`.
+Download the latest release from the [Releases](https://github.com/YOUR_USERNAME/fp82-mac-fix/releases) page.
+
+**⚠️ Important**: After downloading, **move the app to your Applications folder** before running it. This prevents macOS from running it in a read-only location (App Translocation) which can cause issues.
+
+1. Open Finder and go to your Downloads folder
+2. Drag `Futureport82Fixer.app` to your Applications folder
+3. Open it from Applications
 
 **⚠️ Security Warning**: macOS may show a warning that the app "cannot be verified" when you first open it. This is normal for unsigned apps. To open it:
 
