@@ -119,7 +119,7 @@ The app wraps the proven `mf-fix-cx.sh` bash script with a native UI. The fix pr
 
 ## Troubleshooting
 
-- **"App cannot be verified"** — Right-click the app → Open, or go to System Settings → Privacy & Security → Open Anyway
+- **"App cannot be verified"** — Right-click the app and choose `Open`, or go to System Settings → Privacy & Security → Open Anyway
 - **CrossOver not found** — Ensure CrossOver is installed at `/Applications/CrossOver.app`
 - **CrossOver hangs after fix** — The app shuts down the wineserver automatically; if it still hangs, quit CrossOver and reopen
 - **White screen persists** — Check the output log for warnings about failed DLL copies
