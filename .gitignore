@@ -38,3 +38,5 @@ DerivedData/
 tasks/
 
 .env
+
+scripts/release-secrets/
