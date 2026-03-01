@@ -1,3 +1,10 @@
+## [1.1.5](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.4...v1.1.5) (2026-03-01)
+
+
+### Bug Fixes
+
+* **ci:** replace notarytool wait with polling and timeout ([ed428f1](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/ed428f1f7330c1e690166af1e124b1359fb53e12))
+
 ## [1.1.4](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.3...v1.1.4) (2026-03-01)
 
 
