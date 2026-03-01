@@ -91,6 +91,12 @@ jobs:
             -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
 
+          echo "Imported signing certificate subjects:"
+          openssl pkcs12 -legacy -in "$CERT_PATH" -nokeys -passin "pass:$APPLE_CERTIFICATE_PASSWORD" 2>/dev/null \
+            | openssl crl2pkcs7 -nocrl -certfile /dev/stdin 2>/dev/null \
+            | openssl pkcs7 -print_certs -noout 2>/dev/null \
+            | sed -n 's/^subject=//p'
+
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
 
       - name: Sign app bundle
@@ -111,6 +117,17 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APP_SPECIFIC_PASSWORD: ${{ secrets.APP_SPECIFIC_PASSWORD }}
         run: |
+          echo "Notarization preflight:"
+          echo "- apple_id length: ${#APPLE_ID}"
+          echo "- team_id: $APPLE_TEAM_ID"
+          echo "- app_specific_password length: ${#APP_SPECIFIC_PASSWORD}"
+          xcrun notarytool history \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APP_SPECIFIC_PASSWORD" \
+            --output-format json | head -c 1200 || true
+          echo
+
           cd build && zip -r FP82Fixer-notarize.zip FP82Fixer.app
           SUBMISSION_ID=$(xcrun notarytool submit FP82Fixer-notarize.zip \
             --apple-id "$APPLE_ID" \
@@ -123,12 +140,15 @@ jobs:
 
           echo "Notarization submission ID: $SUBMISSION_ID"
           ATTEMPTS=0
+          MAX_ATTEMPTS=720
+          START_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Polling started at: $START_TS"
           while true; do
             STATUS=$(xcrun notarytool info "$SUBMISSION_ID" \
               --apple-id "$APPLE_ID" \
               --team-id "$APPLE_TEAM_ID" \
               --password "$APP_SPECIFIC_PASSWORD" | sed -n 's/^ *status: //p' | head -1)
-            echo "Current status: ${STATUS:-unknown}"
+            echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") Current status: ${STATUS:-unknown}"
 
             if [ "$STATUS" = "Accepted" ]; then
               break
@@ -144,8 +164,18 @@ jobs:
             fi
 
             ATTEMPTS=$((ATTEMPTS + 1))
-            if [ "$ATTEMPTS" -ge 240 ]; then
-              echo "Timed out waiting for notarization after 60 minutes."
+            if [ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]; then
+              echo "Timed out waiting for notarization after 180 minutes."
+              echo "Final notarization info:"
+              xcrun notarytool info "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --team-id "$APPLE_TEAM_ID" \
+                --password "$APP_SPECIFIC_PASSWORD" || true
+              echo "Attempting to retrieve notarization log at timeout:"
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --team-id "$APPLE_TEAM_ID" \
+                --password "$APP_SPECIFIC_PASSWORD" || true
               exit 1
             fi
             sleep 15
