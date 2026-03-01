@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.2...v1.1.3) (2026-03-01)
+
+
+### Bug Fixes
+
+* clarify Gatekeeper troubleshooting wording ([0067bfb](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/0067bfb517f142140277ffb1846b2c8dc38cf4d0))
+
 ## [1.1.2](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.1...v1.1.2) (2026-03-01)
 
 
