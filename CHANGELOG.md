@@ -1,3 +1,10 @@
+## [1.1.4](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.3...v1.1.4) (2026-03-01)
+
+
+### Bug Fixes
+
+* polish README launch instruction casing ([fc84963](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/fc8496378a8deef036ddf24345ce1293f3b61c78))
+
 ## [1.1.3](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.2...v1.1.3) (2026-03-01)
 
 
