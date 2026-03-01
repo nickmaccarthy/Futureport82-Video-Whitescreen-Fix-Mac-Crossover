@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.7...v1.2.0) (2026-03-01)
+
+
+### Features
+
+* **ci:** add notary finisher workflow and release metadata ([d519494](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/d5194944ebc0824bee99d58911224f8ed6a2efa0))
+
 ## [1.1.7](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.6...v1.1.7) (2026-03-01)
 
 
