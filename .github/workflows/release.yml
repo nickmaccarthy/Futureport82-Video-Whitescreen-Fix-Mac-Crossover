@@ -112,11 +112,45 @@ jobs:
           APP_SPECIFIC_PASSWORD: ${{ secrets.APP_SPECIFIC_PASSWORD }}
         run: |
           cd build && zip -r FP82Fixer-notarize.zip FP82Fixer.app
-          xcrun notarytool submit FP82Fixer-notarize.zip \
+          SUBMISSION_ID=$(xcrun notarytool submit FP82Fixer-notarize.zip \
             --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" \
-            --password "$APP_SPECIFIC_PASSWORD" \
-            --wait
+            --password "$APP_SPECIFIC_PASSWORD" | sed -n 's/^  id: //p' | head -1)
+          if [ -z "$SUBMISSION_ID" ]; then
+            echo "Failed to read notarization submission ID."
+            exit 1
+          fi
+
+          echo "Notarization submission ID: $SUBMISSION_ID"
+          ATTEMPTS=0
+          while true; do
+            STATUS=$(xcrun notarytool info "$SUBMISSION_ID" \
+              --apple-id "$APPLE_ID" \
+              --team-id "$APPLE_TEAM_ID" \
+              --password "$APP_SPECIFIC_PASSWORD" | sed -n 's/^ *status: //p' | head -1)
+            echo "Current status: ${STATUS:-unknown}"
+
+            if [ "$STATUS" = "Accepted" ]; then
+              break
+            fi
+
+            if [ "$STATUS" = "Invalid" ] || [ "$STATUS" = "Rejected" ]; then
+              echo "Notarization failed. Retrieving log..."
+              xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --team-id "$APPLE_TEAM_ID" \
+                --password "$APP_SPECIFIC_PASSWORD"
+              exit 1
+            fi
+
+            ATTEMPTS=$((ATTEMPTS + 1))
+            if [ "$ATTEMPTS" -ge 240 ]; then
+              echo "Timed out waiting for notarization after 60 minutes."
+              exit 1
+            fi
+            sleep 15
+          done
+
           xcrun stapler staple FP82Fixer.app
           rm -f FP82Fixer-notarize.zip
 
