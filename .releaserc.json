@@ -1,0 +1,23 @@
+{
+  "branches": ["main"],
+  "tagFormat": "v${version}",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString ${nextRelease.version}\" Resources/Info.plist && /usr/libexec/PlistBuddy -c \"Set :CFBundleVersion ${nextRelease.version}\" Resources/Info.plist"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["Resources/Info.plist", "CHANGELOG.md"],
+        "message": "chore(release): v${nextRelease.version} [skip ci]"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}

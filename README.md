@@ -1,187 +1,141 @@
-# Futureport82 Whitescreen Video Fixer for Mac's running Crossover
+# Futureport82 Video Fix for macOS (CrossOver)
 
-A macOS application that fixes CrossOver bottles to work with Futureport82's media foundation requirements. This fixes the "White Screen" issue a Mac user will see when viewing any video screen in Futureport82.  
+A native macOS app that fixes the white-screen video issue in Futureport82 when running through CrossOver. It automates applying Windows Media Foundation patches to CrossOver Wine bottles.
 
+Based on [HoodedDeath's MF Fix](https://github.com/HoodedDeath/mf-fix).
 
-The fixes for this work are inspired by [HoodedDeath's MF Fix](https://github.com/HoodedDeath/mf-fix)
+<p align="center">
+  <img src="screenshots/setup-video-fast.gif" alt="FP82Fixer demo" width="600">
+</p>
 
 ## Features
 
-- **Native macOS GUI**: Built with PyQt6 for a native Apple Silicon macOS experience
-- **Bottle Management**: List, create, and remove CrossOver bottles
-- **Easy Executable Selection**: Browse and select your Futureport82 executable
-- **One-Click Fix**: Apply all media foundation fixes with a single button click
-- **Real-time Output**: See progress and output from the fix script
-- **Command-Line Interface**: Also available as a CLI tool for automation
-
-## Quick Start Guide
-
-### Download and Install
-
-1. Download the [latest release](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/releases/latest)
-2. Open the downloaded DMG file
-3. Drag `Futureport82Fixer.app` to your Applications folder (or run it directly from the DMG)
-
-### Step 1: Watch the Setup Process
-
-Here's a quick animated guide showing the complete setup process:
-
-![Setup Process](screenshots/setup-video.gif)
-
-**Step 2: Launch the Application**
-
-Launch `Futureport82Fixer.app` or run `python3 find-bottles-gui.py` to open the main window.
-
-![Main Window](screenshots/main-window.png)
-
-**Step 3: Select or Create a Bottle**
-
-Choose an existing CrossOver bottle from the list, or click "Create New Bottle" to create a new one.
-
-![Bottle Selection](screenshots/bottle-selection.png)
-
-**Step 4: Select Futureport82 Executable**
-
-Click "Browse..." and navigate to your Futureport82 executable file (or its directory).
-
-![Executable Selection](screenshots/executable-selection.png)
-
-**Step 5: Apply the Fix**
-
-Click "Apply Media Foundation Fix" and enter your administrator password when prompted. The fix will run automatically and show progress in the output window.
-
-**⚠️ Important**: During the fix process, CrossOver may show 'OK' dialogs in the dock. Click the CrossOver icon to see and dismiss them.
-
-**Step 6: Done!**
-
-Once the fix completes successfully, your Futureport82 installation should work properly with video playback. You can now launch Futureport82 from CrossOver.
+- **Native SwiftUI interface** — built for macOS 14 (Sonoma) and later
+- **Bottle management** — list, create, and remove CrossOver bottles
+- **One-click fix** — copies DLLs, sets Wine overrides, imports registry entries, registers DLLs
+- **Add to bottle** — optionally registers the game as a bottle application
+- **Real-time output** — streams fix progress to an in-app log
+- **No dependencies** — zero third-party libraries, pure Swift + system frameworks
 
 ## Requirements
 
-- macOS (Apple Silicon - arm64)
-- Python 3.8 or later
-- CrossOver installed at `/Applications/CrossOver.app`
-- PyQt6 (will be installed automatically)
+- macOS 14 (Sonoma) or later
+- [CrossOver](https://www.codeweavers.com/crossover) installed at `/Applications/CrossOver.app`
+- Futureport82 game files accessible on disk
 
-## Installation
+## Quick Start
 
-### Option 1: Download Pre-built App
+1. Download `FP82Fixer.zip` from the [latest release](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/releases/latest)
+2. Unzip and move `FP82Fixer.app` to `/Applications`
+3. Right-click → Open (first launch only, to bypass Gatekeeper)
+4. Select or create a CrossOver bottle
+5. Browse to your Futureport82 executable
+6. Click **Apply Fix**
 
-Download the latest release from the [Releases](https://github.com/YOUR_USERNAME/fp82-mac-fix/releases) page.
+During the fix, CrossOver may show dialogs in the dock — click the CrossOver icon to dismiss them.
 
-**⚠️ Important**: After downloading, **move the app to your Applications folder** before running it. This prevents macOS from running it in a read-only location (App Translocation) which can cause issues.
+## Build from Source
 
-1. Open Finder and go to your Downloads folder
-2. Drag `Futureport82Fixer.app` to your Applications folder
-3. Open it from Applications
-
-**⚠️ Security Warning**: macOS may show a warning that the app "cannot be verified" when you first open it. This is normal for unsigned apps. To open it:
-
-1. Right-click (or Control-click) on `Futureport82Fixer.app`
-2. Select "Open" from the context menu
-3. Click "Open" in the security dialog
-
-Alternatively, go to **System Settings > Privacy & Security** and click "Open Anyway" next to the blocked app message.
-
-### Option 2: Build from Source
-
-1. Clone this repository:
-```bash
-git clone https://github.com/YOUR_USERNAME/fp82-mac-fix.git
-cd fp82-mac-fix
-```
-
-2. Install dependencies:
-```bash
-pip3 install -r requirements.txt
-pip3 install pyinstaller
-```
-
-3. Build the app:
-```bash
-chmod +x build-app.sh
-./build-app.sh
-```
-
-This will create `Futureport82Fixer.app` in the current directory.
-
-## Usage
-
-### GUI Version
-
-1. **Launch the app**: 
-   - Double-click `Futureport82Fixer.app`, or
-   - Run `make gui`, or
-   - Run `python3 find-bottles-gui.py`
-
-2. **Select or create a bottle**: 
-   - Choose an existing bottle from the list, or
-   - Click "Create New Bottle" to create a new one
-
-3. **Select Futureport82 executable**: 
-   - Click "Browse..." and select your Futureport82 executable (or its directory)
-
-4. **Apply fix**: 
-   - Click "Apply Media Foundation Fix" and enter your administrator password when prompted
-   - ⚠️ **Important**: Watch for CrossOver dialogs in the dock during the fix process
-
-### Command-Line Version
-
-Run the CLI tool:
-```bash
-make go-fast
-# or
-python3 find-bottles.py
-```
-
-Follow the interactive prompts to select a bottle and provide the Futureport82 executable path.
-
-## Building a Distributable App
-
-To create a standalone macOS app bundle:
+Requires Swift 5.10+ (included with Xcode 15.3+).
 
 ```bash
-./build-app.sh
+# Debug build + run
+make run
+
+# Release build
+make release
+
+# Create .app bundle (ad-hoc signed)
+make bundle
+
+# Create distributable zip
+make dist
 ```
 
-This will create `Futureport82Fixer.app` in the current directory.
+## Signed and Notarized Release
 
-### Creating a DMG (Optional)
+To distribute `FP82Fixer.app` publicly on GitHub, use a Developer ID signed + notarized build.
 
-To create a DMG file for distribution:
+### One-time Apple setup
+
+1. Create a `Developer ID Application` certificate in Apple Developer.
+2. Install it in your login keychain.
+3. Verify it exists:
 
 ```bash
-hdiutil create -volname "Futureport82Fixer" -srcfolder "Futureport82Fixer.app" -ov -format UDZO "Futureport82Fixer.dmg"
+security find-identity -v -p codesigning
 ```
+
+You should see an identity like:
+`Developer ID Application: Your Name (TEAMID)`.
+
+### Local signed release
+
+Create an Apple ID app-specific password at [appleid.apple.com](https://appleid.apple.com), then run:
+
+```bash
+export SIGNING_IDENTITY="Developer ID Application: Your Name (TEAMID)"
+export APPLE_ID="you@example.com"
+export TEAM_ID="TEAMID"
+export APP_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+
+make release-signed
+make verify-signature
+```
+
+Output artifact: `build/FP82Fixer.zip`.
+
+### GitHub Actions signed release
+
+This repository includes a release workflow at `.github/workflows/release.yml` that signs, notarizes, and uploads `FP82Fixer.zip` to GitHub Releases.
+
+Set these repository secrets:
+
+- `APPLE_CERTIFICATE_BASE64`: base64-encoded `.p12` export of your Developer ID Application cert
+- `APPLE_CERTIFICATE_PASSWORD`: password used when exporting the `.p12`
+- `SIGNING_IDENTITY`: full identity string from `security find-identity`
+- `APPLE_ID`: your Apple ID email
+- `APPLE_TEAM_ID`: your Apple Developer Team ID
+- `APP_SPECIFIC_PASSWORD`: Apple ID app-specific password
+
+Generate `APPLE_CERTIFICATE_BASE64` with:
+
+```bash
+base64 -i /path/to/certificate.p12 | pbcopy
+```
+
+After secrets are set, push Conventional Commits to `main` (for example `fix:` or `feat:`). The workflow will create a versioned release and attach `FP82Fixer.zip`.
 
 ## How It Works
 
-The application applies Windows Media Foundation fixes to CrossOver bottles by:
+The app wraps the proven `mf-fix-cx.sh` bash script with a native UI. The fix process:
 
-1. Copying required Media Foundation DLLs to the bottle's system directories
-2. Registering Media Foundation components in the Windows registry
-3. Configuring the bottle environment for proper media playback
-
-All fixes are applied automatically with a single click.
+1. **Copies Media Foundation DLLs** to the bottle's `system32` and `syswow64` directories
+2. **Sets Wine DLL overrides** to prefer native versions for 9 MF-related DLLs
+3. **Imports registry entries** (`mf.reg`, `wmf.reg`) via `regedit.exe`
+4. **Registers DLLs** (`colorcnv.dll`, `msmpeg2adec.dll`, `msmpeg2vdec.dll`) via `regsvr32`
+5. **Copies `mfplat.dll`** to the game directory
+6. **Shuts down wineserver** to release locks before CrossOver opens the bottle
 
 ## Troubleshooting
 
-- **"App cannot be verified" warning**: See the [Security Warning](#option-1-download-pre-built-app) section above for instructions on how to open the app
-- **CrossOver not found**: Ensure CrossOver is installed at `/Applications/CrossOver.app`
-- **Permission errors**: The fix script requires administrator privileges to modify system DLLs
-- **Script not found**: Ensure `mf-fix-cx.sh` is in the same directory as the application
-- **CrossOver dialogs**: During the fix, CrossOver may show 'OK' dialogs in the dock. Click the CrossOver icon to see and dismiss them
+- **"App cannot be verified"** — Right-click the app → Open, or go to System Settings → Privacy & Security → Open Anyway
+- **CrossOver not found** — Ensure CrossOver is installed at `/Applications/CrossOver.app`
+- **CrossOver hangs after fix** — The app shuts down the wineserver automatically; if it still hangs, quit CrossOver and reopen
+- **White screen persists** — Check the output log for warnings about failed DLL copies
 
-## Technology Stack
+## Versioning
 
-- **PyQt6**: Modern, native-looking GUI framework for macOS
-- **Python 3**: Core language
-- **PyInstaller**: For creating distributable app bundles
-- **Bash**: For system-level fixes and automation
+This project uses [semantic-release](https://github.com/semantic-release/semantic-release) with [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and releases.
 
-## Contributing
+When commits are pushed to `main`, semantic-release analyzes commit messages to determine the next version:
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+| Prefix | Example | Bump |
+|---|---|---|
+| `fix:` | `fix: handle missing bottle path` | Patch (1.0.x) |
+| `feat:` | `feat: add drag-and-drop bottle import` | Minor (1.x.0) |
+| `feat!:` or `BREAKING CHANGE:` | `feat!: require macOS 15` | Major (x.0.0) |
+| `chore:`, `docs:`, `refactor:` | `chore: update dependencies` | No release |
 
 ## License
 
@@ -189,5 +143,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Acknowledgments
 
-This tool helps make Futureport82 playable on macOS through CrossOver by fixing Media Foundation compatibility issues.
-
+- [HoodedDeath's MF Fix](https://github.com/HoodedDeath/mf-fix) — the original Media Foundation fix scripts
+- [CodeWeavers CrossOver](https://www.codeweavers.com/crossover) — Wine-based Windows compatibility layer for macOS
