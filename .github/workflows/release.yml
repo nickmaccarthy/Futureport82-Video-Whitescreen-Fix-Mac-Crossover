@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install semantic-release plugins
+        run: npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/exec @semantic-release/git @semantic-release/github
+
+      - name: Run semantic-release
+        id: semrel
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+        run: |
+          npx semantic-release 2>&1 | tee /tmp/sr-output.txt
+          VERSION=$(sed -n 's/.*Published release \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*/\1/p' /tmp/sr-output.txt | head -1)
+          if [ -n "$VERSION" ]; then
+            echo "new_release=true" >> $GITHUB_OUTPUT
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Released version: $VERSION"
+          else
+            echo "new_release=false" >> $GITHUB_OUTPUT
+            echo "No new release"
+          fi
+
+      - name: Build release binary
+        if: steps.semrel.outputs.new_release == 'true'
+        run: swift build -c release
+
+      - name: Create app bundle
+        if: steps.semrel.outputs.new_release == 'true'
+        run: |
+          APP_NAME="FP82Fixer"
+          BUNDLE_DIR="build/${APP_NAME}.app"
+          VERSION="${{ steps.semrel.outputs.version }}"
+
+          mkdir -p "${BUNDLE_DIR}/Contents/MacOS"
+          mkdir -p "${BUNDLE_DIR}/Contents/Resources"
+
+          cp ".build/release/${APP_NAME}" "${BUNDLE_DIR}/Contents/MacOS/"
+          cp -R ".build/release/${APP_NAME}_${APP_NAME}.bundle" "${BUNDLE_DIR}/Contents/Resources/" 2>/dev/null || true
+
+          cp Resources/Info.plist "${BUNDLE_DIR}/Contents/"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" "${BUNDLE_DIR}/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VERSION}" "${BUNDLE_DIR}/Contents/Info.plist"
+
+          cp Resources/AppIcon.icns "${BUNDLE_DIR}/Contents/Resources/" 2>/dev/null || true
+
+      - name: Import signing certificate
+        if: steps.semrel.outputs.new_release == 'true'
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
+
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" -P "$APPLE_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
+
+      - name: Sign app bundle
+        if: steps.semrel.outputs.new_release == 'true'
+        env:
+          SIGNING_IDENTITY: ${{ secrets.SIGNING_IDENTITY }}
+        run: |
+          codesign --force --deep --options runtime \
+            --entitlements Resources/FP82Fixer.entitlements \
+            --sign "$SIGNING_IDENTITY" \
+            --timestamp \
+            build/FP82Fixer.app
+
+      - name: Notarize app
+        if: steps.semrel.outputs.new_release == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_SPECIFIC_PASSWORD: ${{ secrets.APP_SPECIFIC_PASSWORD }}
+        run: |
+          cd build && zip -r FP82Fixer-notarize.zip FP82Fixer.app
+          xcrun notarytool submit FP82Fixer-notarize.zip \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APP_SPECIFIC_PASSWORD" \
+            --wait
+          xcrun stapler staple FP82Fixer.app
+          rm -f FP82Fixer-notarize.zip
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH"
+          fi
+
+      - name: Upload zip to GitHub Release
+        if: steps.semrel.outputs.new_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd build && zip -r FP82Fixer.zip FP82Fixer.app
+          gh release upload "v${{ steps.semrel.outputs.version }}" FP82Fixer.zip --clobber
