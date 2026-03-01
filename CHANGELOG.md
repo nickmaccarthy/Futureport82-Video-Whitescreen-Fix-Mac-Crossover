@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.0...v1.1.1) (2026-03-01)
+
+
+### Bug Fixes
+
+* resolve main actor isolation build errors ([5eecda2](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/5eecda253ee698182ac4414df00c71a31abc5dbe))
+
 # [1.1.0](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.0.5...v1.1.0) (2026-03-01)
 
 
