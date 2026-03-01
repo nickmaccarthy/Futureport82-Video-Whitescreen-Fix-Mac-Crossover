@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 struct ContentView: View {
     @State private var viewModel = FP82FixerViewModel()
 

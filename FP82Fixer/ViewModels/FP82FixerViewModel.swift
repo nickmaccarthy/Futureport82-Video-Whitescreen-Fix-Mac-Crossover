@@ -101,8 +101,8 @@ class FP82FixerViewModel {
 
         Task {
             do {
-                try await CrossOverService.createBottle(name: name) { [weak self] text in
-                    Task { @MainActor in self?.appendOutput(text) }
+                try await CrossOverService.createBottle(name: name) { text in
+                    Task { @MainActor [weak self] in self?.appendOutput(text) }
                 }
                 appendOutput("Bottle '\(name)' created successfully!\n")
                 refreshBottles()
@@ -127,8 +127,8 @@ class FP82FixerViewModel {
 
         Task {
             do {
-                try await CrossOverService.removeBottle(name: bottle.name) { [weak self] text in
-                    Task { @MainActor in self?.appendOutput(text) }
+                try await CrossOverService.removeBottle(name: bottle.name) { text in
+                    Task { @MainActor [weak self] in self?.appendOutput(text) }
                 }
                 appendOutput("Bottle '\(bottle.name)' removed successfully.\n")
                 refreshBottles()
@@ -197,8 +197,8 @@ class FP82FixerViewModel {
                     bottleName: bottle.name,
                     bottlePath: bottle.path,
                     executablePath: URL(fileURLWithPath: executablePath)
-                ) { [weak self] text in
-                    Task { @MainActor in self?.appendOutput(text) }
+                ) { text in
+                    Task { @MainActor [weak self] in self?.appendOutput(text) }
                 }
 
                 if addToBottle {
@@ -207,8 +207,8 @@ class FP82FixerViewModel {
                         executablePath: URL(fileURLWithPath: executablePath),
                         bottleName: bottle.name,
                         bottlePath: bottle.path
-                    ) { [weak self] text in
-                        Task { @MainActor in self?.appendOutput(text) }
+                    ) { text in
+                        Task { @MainActor [weak self] in self?.appendOutput(text) }
                     }
                 }
 
@@ -244,8 +244,8 @@ class FP82FixerViewModel {
         await MediaFoundationService.shutdownWineserver(
             bottleName: bottle.name,
             bottlePath: bottle.path
-        ) { [weak self] text in
-            Task { @MainActor in self?.appendOutput(text) }
+        ) { text in
+            Task { @MainActor [weak self] in self?.appendOutput(text) }
         }
     }
 
