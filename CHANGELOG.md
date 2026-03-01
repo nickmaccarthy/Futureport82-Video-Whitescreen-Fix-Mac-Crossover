@@ -1,3 +1,10 @@
+## [1.1.6](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.5...v1.1.6) (2026-03-01)
+
+
+### Bug Fixes
+
+* **ci:** add notarization diagnostics and extend timeout ([52484f3](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/52484f3a7f918b95a9987dbdb3377ec40ac5fd53))
+
 ## [1.1.5](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.4...v1.1.5) (2026-03-01)
 
 
