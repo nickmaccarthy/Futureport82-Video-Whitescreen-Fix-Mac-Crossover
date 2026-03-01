@@ -1,0 +1,134 @@
+name: Notary Finisher
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to finalize (e.g. v1.1.7). Leave empty for latest."
+        required: false
+        type: string
+      submission_id:
+        description: "Optional notarization submission ID override."
+        required: false
+        type: string
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  finalize-notarization:
+    runs-on: macos-14
+    steps:
+      - name: Resolve release tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="$(gh api repos/${{ github.repository }}/releases/latest --jq .tag_name)"
+          fi
+          if [ -z "$TAG" ]; then
+            echo "No release tag found."
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Using tag: $TAG"
+
+      - name: Resolve submission ID
+        id: sub
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SUBMISSION_ID="${{ github.event.inputs.submission_id }}"
+          if [ -z "$SUBMISSION_ID" ]; then
+            mkdir -p /tmp/notary-meta
+            if gh release download "${{ steps.tag.outputs.tag }}" \
+              --pattern "FP82Fixer-notary-metadata.json" \
+              -D /tmp/notary-meta; then
+              SUBMISSION_ID="$(jq -r '.submission_id // empty' /tmp/notary-meta/FP82Fixer-notary-metadata.json)"
+            fi
+          fi
+
+          if [ -z "$SUBMISSION_ID" ]; then
+            echo "No submission ID available for ${{ steps.tag.outputs.tag }}. Nothing to finalize."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "submission_id=$SUBMISSION_ID" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "Using submission ID: $SUBMISSION_ID"
+
+      - name: Check notarization status
+        id: status
+        if: steps.sub.outputs.skip != 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_SPECIFIC_PASSWORD: ${{ secrets.APP_SPECIFIC_PASSWORD }}
+        run: |
+          INFO="$(xcrun notarytool info "${{ steps.sub.outputs.submission_id }}" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APP_SPECIFIC_PASSWORD")"
+          echo "$INFO"
+          STATUS="$(printf '%s\n' "$INFO" | sed -n 's/^  status: //p' | head -1)"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+          if [ "$STATUS" = "In Progress" ]; then
+            echo "Notarization still in progress. Exiting successfully; rerun later."
+            exit 0
+          fi
+
+          if [ "$STATUS" = "Invalid" ] || [ "$STATUS" = "Rejected" ]; then
+            echo "Notarization failed. Fetching log..."
+            xcrun notarytool log "${{ steps.sub.outputs.submission_id }}" \
+              --apple-id "$APPLE_ID" \
+              --team-id "$APPLE_TEAM_ID" \
+              --password "$APP_SPECIFIC_PASSWORD"
+            exit 1
+          fi
+
+          if [ "$STATUS" != "Accepted" ]; then
+            echo "Unexpected notarization status: $STATUS"
+            exit 1
+          fi
+
+      - name: Staple and replace release asset
+        if: steps.sub.outputs.skip != 'true' && steps.status.outputs.status == 'Accepted'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/notary-final
+          gh release download "${{ steps.tag.outputs.tag }}" --pattern "FP82Fixer.zip" -D /tmp/notary-final
+          cd /tmp/notary-final
+
+          ditto -x -k FP82Fixer.zip .
+          if [ ! -d FP82Fixer.app ]; then
+            echo "FP82Fixer.app not found after unzip."
+            exit 1
+          fi
+
+          xcrun stapler staple FP82Fixer.app
+          ditto -c -k --sequesterRsrc --keepParent FP82Fixer.app FP82Fixer.zip
+          gh release upload "${{ steps.tag.outputs.tag }}" FP82Fixer.zip --clobber
+
+      - name: Update notarization metadata
+        if: steps.sub.outputs.skip != 'true' && steps.status.outputs.status == 'Accepted'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > /tmp/FP82Fixer-notary-metadata.json <<EOF
+          {
+            "tag": "${{ steps.tag.outputs.tag }}",
+            "submission_id": "${{ steps.sub.outputs.submission_id }}",
+            "notarize_outcome": "accepted",
+            "finalized_at_utc": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "run_id": "${{ github.run_id }}",
+            "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          EOF
+          gh release upload "${{ steps.tag.outputs.tag }}" /tmp/FP82Fixer-notary-metadata.json#FP82Fixer-notary-metadata.json --clobber

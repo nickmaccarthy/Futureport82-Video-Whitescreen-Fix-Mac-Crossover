@@ -139,6 +139,7 @@ jobs:
             echo "Failed to read notarization submission ID."
             exit 1
           fi
+          echo "submission_id=$SUBMISSION_ID" >> "$GITHUB_OUTPUT"
 
           echo "Notarization submission ID: $SUBMISSION_ID"
           ATTEMPTS=0
@@ -191,6 +192,23 @@ jobs:
         run: |
           echo "::warning::Notarization did not complete in CI. Uploading signed app zip anyway."
           echo "::warning::Check the 'Notarize app' logs for submission ID and continue polling manually."
+
+      - name: Upload notarization metadata
+        if: always() && steps.semrel.outputs.new_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cat > build/FP82Fixer-notary-metadata.json <<EOF
+          {
+            "tag": "v${{ steps.semrel.outputs.version }}",
+            "version": "${{ steps.semrel.outputs.version }}",
+            "submission_id": "${{ steps.notarize.outputs.submission_id }}",
+            "notarize_outcome": "${{ steps.notarize.outcome }}",
+            "run_id": "${{ github.run_id }}",
+            "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          EOF
+          gh release upload "v${{ steps.semrel.outputs.version }}" build/FP82Fixer-notary-metadata.json --clobber
 
       - name: Clean up keychain
         if: always()
