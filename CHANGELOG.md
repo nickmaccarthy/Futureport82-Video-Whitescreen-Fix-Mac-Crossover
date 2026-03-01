@@ -1,3 +1,10 @@
+## [1.1.7](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.6...v1.1.7) (2026-03-01)
+
+
+### Bug Fixes
+
+* **ci:** upload release zip even if notarization times out ([8bb4bcf](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/8bb4bcf3237a71cda04317c2d356d6a09e67dbf5))
+
 ## [1.1.6](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.5...v1.1.6) (2026-03-01)
 
 
