@@ -111,7 +111,9 @@ jobs:
             build/FP82Fixer.app
 
       - name: Notarize app
+        id: notarize
         if: steps.semrel.outputs.new_release == 'true'
+        continue-on-error: true
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -184,6 +186,12 @@ jobs:
           xcrun stapler staple FP82Fixer.app
           rm -f FP82Fixer-notarize.zip
 
+      - name: Notarization warning
+        if: steps.semrel.outputs.new_release == 'true' && steps.notarize.outcome != 'success'
+        run: |
+          echo "::warning::Notarization did not complete in CI. Uploading signed app zip anyway."
+          echo "::warning::Check the 'Notarize app' logs for submission ID and continue polling manually."
+
       - name: Clean up keychain
         if: always()
         run: |
@@ -192,7 +200,7 @@ jobs:
           fi
 
       - name: Upload zip to GitHub Release
-        if: steps.semrel.outputs.new_release == 'true'
+        if: always() && steps.semrel.outputs.new_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
