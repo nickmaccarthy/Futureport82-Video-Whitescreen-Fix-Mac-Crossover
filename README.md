@@ -27,7 +27,7 @@ Based on [HoodedDeath's MF Fix](https://github.com/HoodedDeath/mf-fix).
 
 1. Download `FP82Fixer.zip` from the [latest release](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/releases/latest)
 2. Unzip and move `FP82Fixer.app` to `/Applications`
-3. Double-click to launch (use Right-click → Open only if Gatekeeper prompts)
+3. Double-click to launch (use right-click → Open only if Gatekeeper prompts)
 4. Select or create a CrossOver bottle
 5. Browse to your Futureport82 executable
 6. Click **Apply Fix**
