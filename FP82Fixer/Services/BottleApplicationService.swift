@@ -5,6 +5,12 @@ struct BottleApplicationService {
     private static let wineBin = URL(
         fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/wine"
     )
+    private static let cxmenuBin = URL(
+        fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/cxmenu"
+    )
+    private static let cxbottleBin = URL(
+        fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/cxbottle"
+    )
 
     static func addToBottle(
         executablePath: URL,
@@ -65,9 +71,20 @@ struct BottleApplicationService {
             onOutput("Warning: Could not create batch file: \(error.localizedDescription)\n")
         }
 
-        // Skip .lnk creation via cscript.exe for stability.
-        // CrossOver can beachball on bottles after forced cscript termination.
-        onOutput("Skipping Windows .lnk shortcut creation for stability.\n")
+        // Create Start Menu launcher and ask CrossOver to resync menus.
+        let startMenuPath = driveC.appendingPathComponent(
+            "users/crossover/AppData/Roaming/Microsoft/Windows/Start Menu/Programs"
+        )
+        try fm.createDirectory(at: startMenuPath, withIntermediateDirectories: true)
+        let startMenuBatchFile = startMenuPath.appendingPathComponent("Futureport82.bat")
+        do {
+            try batchContent.write(to: startMenuBatchFile, atomically: true, encoding: .utf8)
+            onOutput("Created Start Menu launcher in bottle.\n")
+        } catch {
+            onOutput("Warning: Could not create Start Menu launcher: \(error.localizedDescription)\n")
+        }
+
+        await resyncBottleMenus(bottleName: bottleName, onOutput: onOutput)
 
         onOutput("Application available at: \(winePath)\n")
         onOutput("Note: You may need to restart CrossOver or refresh the bottle to see it in the application menu.\n")
@@ -80,5 +97,25 @@ struct BottleApplicationService {
         )
     }
 
-    
+    private static func resyncBottleMenus(
+        bottleName: String,
+        onOutput: @Sendable @escaping (String) -> Void
+    ) async {
+        let syncExitCode = try? await ShellService.run(
+            executable: cxmenuBin,
+            arguments: ["--bottle", bottleName, "--sync", "--mode", "install"],
+            onOutput: onOutput
+        )
+        if syncExitCode == 0 {
+            onOutput("Resynced CrossOver menu entries for bottle.\n")
+        } else {
+            onOutput("Warning: Could not resync CrossOver menu entries automatically.\n")
+        }
+
+        _ = try? await ShellService.run(
+            executable: cxbottleBin,
+            arguments: ["--bottle", bottleName, "--install"],
+            onOutput: onOutput
+        )
+    }
 }
