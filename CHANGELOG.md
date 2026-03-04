@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.1...v1.2.2) (2026-03-04)
+
+
+### Bug Fixes
+
+* **release:** include SwiftPM resource bundle in packaged app ([f12b054](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/f12b054437eb748b0cf24c16e12a81bce11a5a9c))
+
 ## [1.2.1](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.0...v1.2.1) (2026-03-04)
 
 
