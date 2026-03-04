@@ -7,7 +7,7 @@ struct MediaFoundationService {
     )
 
     static func resourceDirectory() throws -> URL {
-        guard let url = Bundle.module.url(forResource: "FixResources", withExtension: nil) else {
+        guard let url = ResourceBundleLocator.url(forResource: "FixResources", withExtension: nil) else {
             throw FixerError.resourcesNotFound
         }
         return url
