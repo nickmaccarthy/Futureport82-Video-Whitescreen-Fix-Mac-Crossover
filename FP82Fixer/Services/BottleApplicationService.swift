@@ -65,30 +65,9 @@ struct BottleApplicationService {
             onOutput("Warning: Could not create batch file: \(error.localizedDescription)\n")
         }
 
-        // Try creating a Windows shortcut via VBScript (best-effort, 3s timeout)
-        await createWindowsShortcut(
-            winePath: winePath,
-            shortcutDir: desktopPath,
-            shortcutName: "Futureport82.lnk",
-            bottleName: bottleName,
-            driveC: driveC,
-            onOutput: onOutput
-        )
-
-        // Create Start Menu shortcut
-        let startMenuPath = driveC.appendingPathComponent(
-            "users/crossover/AppData/Roaming/Microsoft/Windows/Start Menu/Programs"
-        )
-        try fm.createDirectory(at: startMenuPath, withIntermediateDirectories: true)
-
-        await createWindowsShortcut(
-            winePath: winePath,
-            shortcutDir: startMenuPath,
-            shortcutName: "Futureport82.lnk",
-            bottleName: bottleName,
-            driveC: driveC,
-            onOutput: onOutput
-        )
+        // Skip .lnk creation via cscript.exe for stability.
+        // CrossOver can beachball on bottles after forced cscript termination.
+        onOutput("Skipping Windows .lnk shortcut creation for stability.\n")
 
         onOutput("Application available at: \(winePath)\n")
         onOutput("Note: You may need to restart CrossOver or refresh the bottle to see it in the application menu.\n")
@@ -101,77 +80,5 @@ struct BottleApplicationService {
         )
     }
 
-    private static func createWindowsShortcut(
-        winePath: String,
-        shortcutDir: URL,
-        shortcutName: String,
-        bottleName: String,
-        driveC: URL,
-        onOutput: @Sendable @escaping (String) -> Void
-    ) async {
-        let shortcutPath = shortcutDir.appendingPathComponent(shortcutName)
-        let vbsFile = shortcutDir.appendingPathComponent("create_shortcut.vbs")
-        let wineDir = (winePath as NSString).deletingLastPathComponent
-
-        let winePathEsc = winePath.replacingOccurrences(of: "\\", with: "\\\\")
-        let shortcutPathEsc = shortcutPath.path.replacingOccurrences(of: "\\", with: "\\\\")
-        let wineDirEsc = wineDir.replacingOccurrences(of: "\\", with: "\\\\")
-
-        let vbsContent = """
-        Set oWS = WScript.CreateObject("WScript.Shell")
-        sLinkFile = "\(shortcutPathEsc)"
-        Set oLink = oWS.CreateShortcut(sLinkFile)
-        oLink.TargetPath = "\(winePathEsc)"
-        oLink.WorkingDirectory = "\(wineDirEsc)"
-        oLink.Description = "Futureport82"
-        oLink.Save
-        """
-
-        do {
-            try vbsContent.write(to: vbsFile, atomically: true, encoding: .utf8)
-
-            let vbsWinePath = vbsFile.path
-                .replacingOccurrences(of: driveC.path, with: "C:\\")
-                .replacingOccurrences(of: "/", with: "\\")
-
-            let process = Process()
-            process.executableURL = wineBin
-            process.arguments = [
-                "--bottle", bottleName,
-                "--cx-app", "cscript.exe", "//nologo", vbsWinePath
-            ]
-            process.standardOutput = FileHandle.nullDevice
-            process.standardError = FileHandle.nullDevice
-
-            try process.run()
-
-            let completed = await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
-                DispatchQueue.global().async {
-                    var elapsed: TimeInterval = 0
-                    while process.isRunning && elapsed < 3.0 {
-                        Thread.sleep(forTimeInterval: 0.1)
-                        elapsed += 0.1
-                    }
-                    if process.isRunning {
-                        // Use SIGKILL (like Python's process.kill()) not SIGTERM
-                        kill(process.processIdentifier, SIGKILL)
-                        process.waitUntilExit()
-                        continuation.resume(returning: false)
-                    } else {
-                        continuation.resume(returning: process.terminationStatus == 0)
-                    }
-                }
-            }
-
-            if completed {
-                onOutput("Created Windows shortcut.\n")
-            } else {
-                onOutput("Skipped Windows shortcut creation (timed out).\n")
-            }
-        } catch {
-            // Non-critical
-        }
-
-        try? FileManager.default.removeItem(at: vbsFile)
-    }
+    
 }
