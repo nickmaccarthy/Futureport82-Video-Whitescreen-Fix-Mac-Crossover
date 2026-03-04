@@ -128,7 +128,6 @@ struct BottleApplicationService {
                 executable: cxmenuBin,
                 arguments: [
                     "--bottle", bottlePath.path,
-                    "--crossover",
                     "--create", menuPath,
                     "--type", "raw",
                     "--description", "Futureport82",
