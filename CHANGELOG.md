@@ -1,3 +1,10 @@
+## [1.2.7](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.6...v1.2.7) (2026-03-04)
+
+
+### Bug Fixes
+
+* **add-to-bottle:** restore app registration via cxmenu sync ([ca0706c](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/ca0706c8f11565b03ad15ea9a0ca9996635aa6a7))
+
 ## [1.2.6](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.5...v1.2.6) (2026-03-04)
 
 
