@@ -21,7 +21,7 @@ bundle: release
 	@mkdir -p $(BUNDLE_DIR)/Contents/MacOS
 	@mkdir -p $(BUNDLE_DIR)/Contents/Resources
 	@cp $(BINARY) $(BUNDLE_DIR)/Contents/MacOS/
-	@# Copy SPM resource bundle to Resources (Bundle.module finds it via Bundle.main.resourceURL)
+	@# Copy SPM resource bundle to Resources directory
 	@RESOURCE_BUNDLE=$$(find -L .build/release -maxdepth 1 -type d -name "$(APP_NAME)_*.bundle" | head -n 1); \
 		if [ -z "$$RESOURCE_BUNDLE" ]; then \
 			echo "SwiftPM resource bundle not found in .build/release"; \

@@ -172,7 +172,7 @@ struct AppBackground: View {
 
     @ViewBuilder
     private func backgroundImage(size: CGSize) -> some View {
-        if let url = Bundle.module.url(forResource: "background", withExtension: "png", subdirectory: "Images"),
+        if let url = ResourceBundleLocator.url(forResource: "background", withExtension: "png", subdirectory: "Images"),
            let nsImage = NSImage(contentsOf: url) {
             Image(nsImage: nsImage)
                 .resizable()
