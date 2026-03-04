@@ -46,6 +46,7 @@ jobs:
           if [ -z "$SUBMISSION_ID" ]; then
             mkdir -p /tmp/notary-meta
             if gh release download "${{ steps.tag.outputs.tag }}" \
+              --repo "${{ github.repository }}" \
               --pattern "FP82Fixer-notary-metadata.json" \
               -D /tmp/notary-meta; then
               SUBMISSION_ID="$(jq -r '.submission_id // empty' /tmp/notary-meta/FP82Fixer-notary-metadata.json)"
@@ -103,7 +104,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p /tmp/notary-final
-          gh release download "${{ steps.tag.outputs.tag }}" --pattern "FP82Fixer.zip" -D /tmp/notary-final
+          gh release download "${{ steps.tag.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --pattern "FP82Fixer.zip" \
+            -D /tmp/notary-final
           cd /tmp/notary-final
 
           ditto -x -k FP82Fixer.zip .
@@ -114,7 +118,8 @@ jobs:
 
           xcrun stapler staple FP82Fixer.app
           ditto -c -k --sequesterRsrc --keepParent FP82Fixer.app FP82Fixer.zip
-          gh release upload "${{ steps.tag.outputs.tag }}" FP82Fixer.zip --clobber
+          gh release upload "${{ steps.tag.outputs.tag }}" FP82Fixer.zip --clobber \
+            --repo "${{ github.repository }}"
 
       - name: Update notarization metadata
         if: steps.sub.outputs.skip != 'true' && steps.status.outputs.status == 'Accepted'
@@ -131,4 +136,5 @@ jobs:
             "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           }
           EOF
-          gh release upload "${{ steps.tag.outputs.tag }}" /tmp/FP82Fixer-notary-metadata.json#FP82Fixer-notary-metadata.json --clobber
+          gh release upload "${{ steps.tag.outputs.tag }}" /tmp/FP82Fixer-notary-metadata.json#FP82Fixer-notary-metadata.json --clobber \
+            --repo "${{ github.repository }}"
