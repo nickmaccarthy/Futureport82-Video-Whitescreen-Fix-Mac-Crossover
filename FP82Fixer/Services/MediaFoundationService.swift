@@ -96,6 +96,12 @@ struct MediaFoundationService {
             environment: env,
             onOutput: onOutput
         )
+        _ = try? await ShellService.run(
+            executable: wineBin,
+            arguments: ["--bottle", bottleName, "--cx-app", "wineserver", "-w"],
+            environment: env,
+            onOutput: onOutput
+        )
         try? await Task.sleep(for: .seconds(2))
         onOutput("  Wineserver shut down.\n")
     }
