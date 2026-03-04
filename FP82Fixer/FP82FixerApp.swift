@@ -8,7 +8,7 @@ struct FP82FixerApp: App {
         NSApplication.shared.setActivationPolicy(.regular)
         NSApplication.shared.activate(ignoringOtherApps: true)
 
-        if let iconURL = Bundle.module.url(forResource: "app-icon", withExtension: "png", subdirectory: "Images"),
+        if let iconURL = ResourceBundleLocator.url(forResource: "app-icon", withExtension: "png", subdirectory: "Images"),
            let icon = NSImage(contentsOf: iconURL) {
             NSApplication.shared.applicationIconImage = Self.applyIconMask(to: icon)
         }
