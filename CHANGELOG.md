@@ -1,3 +1,10 @@
+## [1.2.10](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.9...v1.2.10) (2026-03-04)
+
+
+### Bug Fixes
+
+* **add-to-bottle:** remove cxmenu crossover flag for local bottles ([978ff1c](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/978ff1c56191fdd5d47ea1b5f255c1b4f6cf8234))
+
 ## [1.2.9](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.8...v1.2.9) (2026-03-04)
 
 
