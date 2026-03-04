@@ -22,7 +22,18 @@ bundle: release
 	@mkdir -p $(BUNDLE_DIR)/Contents/Resources
 	@cp $(BINARY) $(BUNDLE_DIR)/Contents/MacOS/
 	@# Copy SPM resource bundle to Resources (Bundle.module finds it via Bundle.main.resourceURL)
-	@cp -R .build/release/$(APP_NAME)_$(APP_NAME).bundle $(BUNDLE_DIR)/Contents/Resources/ 2>/dev/null || true
+	@RESOURCE_BUNDLE=$$(find -L .build/release -maxdepth 1 -type d -name "$(APP_NAME)_*.bundle" | head -n 1); \
+		if [ -z "$$RESOURCE_BUNDLE" ]; then \
+			echo "SwiftPM resource bundle not found in .build/release"; \
+			ls -la .build/release; \
+			exit 1; \
+		fi; \
+		cp -R "$$RESOURCE_BUNDLE" $(BUNDLE_DIR)/Contents/Resources/; \
+		if [ ! -f "$(BUNDLE_DIR)/Contents/Resources/$$(basename "$$RESOURCE_BUNDLE")/FixResources/mf-fix-cx.sh" ]; then \
+			echo "Copied bundle is missing expected FixResources/mf-fix-cx.sh"; \
+			find "$(BUNDLE_DIR)/Contents/Resources" -maxdepth 4 -print; \
+			exit 1; \
+		fi
 	@cp Resources/Info.plist $(BUNDLE_DIR)/Contents/
 	@# Update version in bundle
 	@VERSION=$$($(PLISTBUDDY) -c "Print CFBundleShortVersionString" Resources/Info.plist) && \
