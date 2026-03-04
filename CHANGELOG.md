@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.0...v1.2.1) (2026-03-04)
+
+
+### Bug Fixes
+
+* **ci:** set gh --repo in notary finisher commands ([d89a1c6](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/d89a1c6be940611dfe7a7bc2ab33b7186211c94a))
+
 # [1.2.0](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.1.7...v1.2.0) (2026-03-01)
 
 
