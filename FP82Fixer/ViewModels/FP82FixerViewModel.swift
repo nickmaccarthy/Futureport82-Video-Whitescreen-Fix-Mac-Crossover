@@ -55,6 +55,7 @@ class FP82FixerViewModel {
     init() {
         detectCrossOver()
         refreshBottles()
+        requestPermissionsOnFirstLaunch()
     }
 
     // MARK: - CrossOver Detection
@@ -180,6 +181,20 @@ class FP82FixerViewModel {
 
         guard confirm.runModal() == .alertFirstButtonReturn else { return }
 
+        let permissions = PermissionService.checkRequiredPermissions(prompt: true)
+        guard permissions.allGranted else {
+            showMissingPermissionsAlert(status: permissions)
+            appendOutput("Permissions required before running the fix.\n")
+            if !permissions.accessibilityTrusted {
+                appendOutput("- Enable Accessibility for FP82Fixer in System Settings -> Privacy & Security -> Accessibility.\n")
+            }
+            if !permissions.appleEventsTrusted {
+                appendOutput("- Allow FP82Fixer to control System Events when prompted (Automation).\n")
+            }
+            appendOutput("After granting, retry Apply Fix.\n\n")
+            return
+        }
+
         runFix(bottle: bottle)
     }
 
@@ -256,6 +271,36 @@ class FP82FixerViewModel {
         alert.messageText = title
         alert.informativeText = detail
         alert.alertStyle = .critical
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    private func requestPermissionsOnFirstLaunch() {
+        let firstLaunchKey = "did_request_permissions_prompt"
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: firstLaunchKey) == false else { return }
+
+        PermissionService.requestStartupPrompts()
+        defaults.set(true, forKey: firstLaunchKey)
+    }
+
+    private func showMissingPermissionsAlert(status: PermissionService.Status) {
+        var missing: [String] = []
+        if !status.accessibilityTrusted {
+            missing.append("Accessibility")
+        }
+        if !status.appleEventsTrusted {
+            missing.append("Automation (System Events)")
+        }
+
+        let alert = NSAlert()
+        alert.messageText = "Permissions Required"
+        alert.informativeText = """
+        FP82Fixer needs \(missing.joined(separator: " and ")) to auto-dismiss Wine/RegSvr32 dialogs.
+
+        Open System Settings -> Privacy & Security and grant these permissions, then retry.
+        """
+        alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }
