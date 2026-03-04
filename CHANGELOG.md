@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.3...v1.2.4) (2026-03-04)
+
+
+### Bug Fixes
+
+* **permissions:** preflight accessibility and automation prompts ([abf4fd0](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/abf4fd05ca91b2683cb2cc3f0d0a7803dae7c00d))
+
 ## [1.2.3](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.2...v1.2.3) (2026-03-04)
 
 
