@@ -11,8 +11,6 @@ on:
         description: "Optional notarization submission ID override."
         required: false
         type: string
-  schedule:
-    - cron: "17 * * * *"
 
 permissions:
   contents: write
