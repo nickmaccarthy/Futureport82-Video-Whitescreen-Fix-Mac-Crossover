@@ -11,6 +11,9 @@ struct BottleApplicationService {
     private static let cxbottleBin = URL(
         fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/cxbottle"
     )
+    private static let cxstartBin = URL(
+        fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/cxstart"
+    )
 
     static func addToBottle(
         executablePath: URL,
@@ -84,7 +87,11 @@ struct BottleApplicationService {
             onOutput("Warning: Could not create Start Menu launcher: \(error.localizedDescription)\n")
         }
 
-        await resyncBottleMenus(bottleName: bottleName, onOutput: onOutput)
+        await registerApplicationMenuEntry(
+            bottlePath: bottlePath,
+            winePath: winePath,
+            onOutput: onOutput
+        )
 
         onOutput("Application available at: \(winePath)\n")
         onOutput("Note: You may need to restart CrossOver or refresh the bottle to see it in the application menu.\n")
@@ -97,24 +104,49 @@ struct BottleApplicationService {
         )
     }
 
-    private static func resyncBottleMenus(
-        bottleName: String,
+    private static func registerApplicationMenuEntry(
+        bottlePath: URL,
+        winePath: String,
         onOutput: @Sendable @escaping (String) -> Void
     ) async {
-        let syncExitCode = try? await ShellService.run(
+        let menuPath = "StartMenu/Futureport82"
+
+        // Best-effort cleanup in case a prior entry exists.
+        _ = try? await ShellService.run(
             executable: cxmenuBin,
-            arguments: ["--bottle", bottleName, "--sync", "--mode", "install"],
+            arguments: ["--bottle", bottlePath.path, "--filter", menuPath, "--delete"],
             onOutput: onOutput
         )
-        if syncExitCode == 0 {
-            onOutput("Resynced CrossOver menu entries for bottle.\n")
+
+        let command = "\"\(cxstartBin.path)\" --bottle \"\(bottlePath.path)\" \"\(winePath)\""
+        let createExitCode = try? await ShellService.run(
+            executable: cxmenuBin,
+            arguments: [
+                "--bottle", bottlePath.path,
+                "--crossover",
+                "--create", menuPath,
+                "--type", "raw",
+                "--description", "Futureport82",
+                "--command", command,
+                "--mode", "install"
+            ],
+            onOutput: onOutput
+        )
+
+        let installExitCode = try? await ShellService.run(
+            executable: cxmenuBin,
+            arguments: ["--bottle", bottlePath.path, "--install"],
+            onOutput: onOutput
+        )
+        if createExitCode == 0 && installExitCode == 0 {
+            onOutput("Registered CrossOver application menu entry.\n")
         } else {
-            onOutput("Warning: Could not resync CrossOver menu entries automatically.\n")
+            onOutput("Warning: Could not fully register CrossOver application menu entry.\n")
         }
 
         _ = try? await ShellService.run(
             executable: cxbottleBin,
-            arguments: ["--bottle", bottleName, "--install"],
+            arguments: ["--bottle", bottlePath.path, "--install"],
             onOutput: onOutput
         )
     }
