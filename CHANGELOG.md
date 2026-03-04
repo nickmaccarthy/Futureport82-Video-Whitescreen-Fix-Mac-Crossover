@@ -1,3 +1,10 @@
+## [1.2.6](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.5...v1.2.6) (2026-03-04)
+
+
+### Bug Fixes
+
+* **stability:** avoid cscript shortcut path that can lock bottles ([ed56762](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/ed56762bb22db5385971b9e02ed51c60b629c825))
+
 ## [1.2.5](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.4...v1.2.5) (2026-03-04)
 
 
