@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.2...v1.2.3) (2026-03-04)
+
+
+### Bug Fixes
+
+* **app:** avoid Bundle.module launch crash in packaged app ([fab364f](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/fab364f1b30e84a8b5b9f626561ba049a9968d23))
+
 ## [1.2.2](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.1...v1.2.2) (2026-03-04)
 
 
