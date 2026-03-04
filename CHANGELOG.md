@@ -1,3 +1,10 @@
+## [1.2.5](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.4...v1.2.5) (2026-03-04)
+
+
+### Bug Fixes
+
+* **crossover:** cleanup wineserver after setup/fix operations ([14077f0](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/14077f0ebc8b7282810265e35da899408d1f5ed5))
+
 ## [1.2.4](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.3...v1.2.4) (2026-03-04)
 
 
