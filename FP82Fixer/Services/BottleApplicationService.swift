@@ -109,37 +109,46 @@ struct BottleApplicationService {
         winePath: String,
         onOutput: @Sendable @escaping (String) -> Void
     ) async {
-        let menuPath = "StartMenu/Futureport82"
-
-        // Best-effort cleanup in case a prior entry exists.
-        _ = try? await ShellService.run(
-            executable: cxmenuBin,
-            arguments: ["--bottle", bottlePath.path, "--filter", menuPath, "--delete"],
-            onOutput: onOutput
-        )
+        let startMenuPath = "StartMenu/Futureport82"
+        let desktopPath = "Desktop/Futureport82"
 
         let command = "\"\(cxstartBin.path)\" --bottle \"\(bottlePath.path)\" \"\(winePath)\""
-        let createExitCode = try? await ShellService.run(
-            executable: cxmenuBin,
-            arguments: [
-                "--bottle", bottlePath.path,
-                "--crossover",
-                "--create", menuPath,
-                "--type", "raw",
-                "--description", "Futureport82",
-                "--command", command,
-                "--mode", "install"
-            ],
-            onOutput: onOutput
-        )
+        let menuPaths = [startMenuPath, desktopPath]
+        var createOK = true
+
+        for menuPath in menuPaths {
+            // Best-effort cleanup in case a prior entry exists.
+            _ = try? await ShellService.run(
+                executable: cxmenuBin,
+                arguments: ["--bottle", bottlePath.path, "--filter", menuPath, "--delete"],
+                onOutput: onOutput
+            )
+
+            let exitCode = try? await ShellService.run(
+                executable: cxmenuBin,
+                arguments: [
+                    "--bottle", bottlePath.path,
+                    "--crossover",
+                    "--create", menuPath,
+                    "--type", "raw",
+                    "--description", "Futureport82",
+                    "--command", command,
+                    "--mode", "install"
+                ],
+                onOutput: onOutput
+            )
+            if exitCode != 0 {
+                createOK = false
+            }
+        }
 
         let installExitCode = try? await ShellService.run(
             executable: cxmenuBin,
             arguments: ["--bottle", bottlePath.path, "--install"],
             onOutput: onOutput
         )
-        if createExitCode == 0 && installExitCode == 0 {
-            onOutput("Registered CrossOver application menu entry.\n")
+        if createOK && installExitCode == 0 {
+            onOutput("Registered CrossOver application entries (Start Menu + Desktop).\n")
         } else {
             onOutput("Warning: Could not fully register CrossOver application menu entry.\n")
         }

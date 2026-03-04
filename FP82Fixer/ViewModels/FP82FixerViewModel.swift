@@ -22,7 +22,7 @@ class FP82FixerViewModel {
 
     // MARK: - Options
 
-    var addToBottle = false
+    var addToBottle = true
 
     // MARK: - Fix state
 
