@@ -109,12 +109,26 @@ struct BottleApplicationService {
         winePath: String,
         onOutput: @Sendable @escaping (String) -> Void
     ) async {
-        let startMenuPath = "StartMenu/Futureport82"
-        let desktopPath = "Desktop/Futureport82"
+        // Match CrossOver's native Start Menu/Desktop path style so the app
+        // entry appears in bottle UI consistently.
+        let startMenuPath = "StartMenu.C^3A_users_crossover_AppData_Roaming_Microsoft_Windows_Start+Menu/Programs/Futureport82.lnk"
+        let desktopPath = "Desktop.C^3A_users_crossover_Desktop/Futureport82.lnk"
+        let legacyStartMenuPath = "StartMenu/Futureport82"
+        let legacyDesktopPath = "Desktop/Futureport82"
 
-        let command = "\"\(cxstartBin.path)\" --bottle \"\(bottlePath.path)\" \"\(winePath)\""
+        // Escape backslashes so cxmenu stores a stable command string.
+        let escapedWinePath = winePath.replacingOccurrences(of: "\\", with: "\\\\")
+        let command = "\"\(cxstartBin.path)\" --bottle \"\(bottlePath.path)\" \"\(escapedWinePath)\""
         let menuPaths = [startMenuPath, desktopPath]
         var createOK = true
+
+        for legacyPath in [legacyStartMenuPath, legacyDesktopPath] {
+            _ = try? await ShellService.run(
+                executable: cxmenuBin,
+                arguments: ["--bottle", bottlePath.path, "--filter", legacyPath, "--delete"],
+                onOutput: onOutput
+            )
+        }
 
         for menuPath in menuPaths {
             // Best-effort cleanup in case a prior entry exists.
