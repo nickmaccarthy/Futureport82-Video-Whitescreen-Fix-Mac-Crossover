@@ -105,6 +105,14 @@ class FP82FixerViewModel {
                 try await CrossOverService.createBottle(name: name) { text in
                     Task { @MainActor [weak self] in self?.appendOutput(text) }
                 }
+                // Ensure no leftover bottle init processes keep CrossOver UI busy.
+                let bottlePath = CrossOverService.bottlesDirectory.appendingPathComponent(name)
+                await MediaFoundationService.shutdownWineserver(
+                    bottleName: name,
+                    bottlePath: bottlePath
+                ) { text in
+                    Task { @MainActor [weak self] in self?.appendOutput(text) }
+                }
                 appendOutput("Bottle '\(name)' created successfully!\n")
                 refreshBottles()
                 selectedBottleID = name
@@ -207,6 +215,9 @@ class FP82FixerViewModel {
         appendOutput("Executable: \(executablePath)\n\n")
 
         Task {
+            defer {
+                isFixRunning = false
+            }
             do {
                 try await MediaFoundationService.applyFix(
                     bottleName: bottle.name,
@@ -232,13 +243,16 @@ class FP82FixerViewModel {
             } catch is CancellationError {
                 appendOutput("\n⚠️ Fix was cancelled.\n")
                 fixResult = .failed
-                await cleanupWineserver(bottle: bottle)
             } catch {
                 appendOutput("\n❌ Error: \(error.localizedDescription)\n")
                 fixResult = .failed
-                await cleanupWineserver(bottle: bottle)
             }
-            isFixRunning = false
+            await cleanupWineserver(
+                bottle: bottle,
+                reason: fixResult == .success
+                    ? "after fix completion"
+                    : "after failure/cancellation"
+            )
         }
     }
 
@@ -254,8 +268,8 @@ class FP82FixerViewModel {
         outputLines = []
     }
 
-    private func cleanupWineserver(bottle: Bottle) async {
-        appendOutput("\n🧹 Cleaning up wineserver after error...\n")
+    private func cleanupWineserver(bottle: Bottle, reason: String) async {
+        appendOutput("\n🧹 Cleaning up wineserver \(reason)...\n")
         await MediaFoundationService.shutdownWineserver(
             bottleName: bottle.name,
             bottlePath: bottle.path
