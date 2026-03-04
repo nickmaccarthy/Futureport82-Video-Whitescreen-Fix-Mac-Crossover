@@ -1,3 +1,10 @@
+## [1.2.12](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.11...v1.2.12) (2026-03-04)
+
+
+### Bug Fixes
+
+* **add-to-bottle:** point cxmenu entries to desktopdata launcher scripts ([bdf39ed](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/bdf39ed26e477b86bd37b595ee21ef1059ddde3e))
+
 ## [1.2.11](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.10...v1.2.11) (2026-03-04)
 
 
