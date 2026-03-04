@@ -1,3 +1,10 @@
+## [1.2.9](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.8...v1.2.9) (2026-03-04)
+
+
+### Bug Fixes
+
+* **add-to-bottle:** create desktop and start menu app entries ([003625f](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/003625f5fc65a7bb71f57ffab295ceaae10cab42))
+
 ## [1.2.8](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.7...v1.2.8) (2026-03-04)
 
 
