@@ -116,9 +116,14 @@ struct BottleApplicationService {
         let legacyStartMenuPath = "StartMenu/Futureport82"
         let legacyDesktopPath = "Desktop/Futureport82"
 
-        // Escape backslashes so cxmenu stores a stable command string.
-        let escapedWinePath = winePath.replacingOccurrences(of: "\\", with: "\\\\")
-        let command = "\"\(cxstartBin.path)\" --bottle \"\(bottlePath.path)\" \"\(escapedWinePath)\""
+        let wrapperScripts = ensureMenuWrapperScripts(
+            bottlePath: bottlePath,
+            winePath: winePath
+        )
+        let commandByPath: [String: String] = [
+            startMenuPath: "\"\(wrapperScripts.startMenu.path)\"",
+            desktopPath: "\"\(wrapperScripts.desktop.path)\""
+        ]
         let menuPaths = [startMenuPath, desktopPath]
         var createOK = true
 
@@ -145,7 +150,7 @@ struct BottleApplicationService {
                     "--create", menuPath,
                     "--type", "raw",
                     "--description", "Futureport82",
-                    "--command", command,
+                    "--command", commandByPath[menuPath] ?? "",
                     "--mode", "install"
                 ],
                 onOutput: onOutput
@@ -171,5 +176,32 @@ struct BottleApplicationService {
             arguments: ["--bottle", bottlePath.path, "--install"],
             onOutput: onOutput
         )
+    }
+
+    private static func ensureMenuWrapperScripts(bottlePath: URL, winePath: String) -> (startMenu: URL, desktop: URL) {
+        let fm = FileManager.default
+        let cxmenuDir = bottlePath.appendingPathComponent("desktopdata/cxmenu")
+        let startDir = cxmenuDir.appendingPathComponent(
+            "StartMenu.C^5E3A_users_crossover_AppData_Roaming_Microsoft_Windows_Start^2BMenu/Programs"
+        )
+        let desktopDir = cxmenuDir.appendingPathComponent("Desktop.C^5E3A_users_crossover_Desktop")
+
+        try? fm.createDirectory(at: startDir, withIntermediateDirectories: true)
+        try? fm.createDirectory(at: desktopDir, withIntermediateDirectories: true)
+
+        let startScript = startDir.appendingPathComponent("Futureport82.lnk")
+        let desktopScript = desktopDir.appendingPathComponent("Futureport82.lnk")
+        let escapedWinePath = winePath.replacingOccurrences(of: "\\", with: "\\\\")
+        let script = """
+        #!/bin/sh
+        exec "\(cxstartBin.path)" --bottle "\(bottlePath.path)" "\(escapedWinePath)" "$@"
+        """
+
+        try? script.write(to: startScript, atomically: true, encoding: .utf8)
+        try? script.write(to: desktopScript, atomically: true, encoding: .utf8)
+        try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: startScript.path)
+        try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: desktopScript.path)
+
+        return (startScript, desktopScript)
     }
 }
