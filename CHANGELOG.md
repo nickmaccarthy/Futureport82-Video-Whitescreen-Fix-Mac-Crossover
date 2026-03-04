@@ -1,3 +1,10 @@
+## [1.2.11](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.10...v1.2.11) (2026-03-04)
+
+
+### Bug Fixes
+
+* **add-to-bottle:** use native lnk-style cxmenu paths ([efe749c](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/commit/efe749c9bf326633370c2a4e88a03c62d966916e))
+
 ## [1.2.10](https://github.com/nickmaccarthy/Futureport82-Video-Whitescreen-Fix-Mac-Crossover/compare/v1.2.9...v1.2.10) (2026-03-04)
 
 
