@@ -3,6 +3,7 @@ BUNDLE_ID = com.fp82fixer.mac
 PLISTBUDDY = /usr/libexec/PlistBuddy
 BINARY = .build/release/$(APP_NAME)
 BUNDLE_DIR = build/$(APP_NAME).app
+SIGNING_IDENTITY ?= Apple Development: nickmaccarthy@gmail.com (N7XVW423HL)
 
 .PHONY: build run release bundle dist clean version bump-patch bump-minor bump-major tag sign notarize release-signed verify-signature
 
@@ -41,8 +42,11 @@ bundle: release
 		$(PLISTBUDDY) -c "Set :CFBundleVersion $$VERSION" $(BUNDLE_DIR)/Contents/Info.plist
 	@# Copy icon if present
 	@cp Resources/AppIcon.icns $(BUNDLE_DIR)/Contents/Resources/ 2>/dev/null || true
-	@# Ad-hoc sign
-	@codesign --force --sign - $(BUNDLE_DIR)
+	@# Sign with a stable local identity so macOS permissions survive rebuilds during local testing.
+	@codesign --force --deep --options runtime \
+		--entitlements Resources/FP82Fixer.entitlements \
+		--sign "$(SIGNING_IDENTITY)" \
+		$(BUNDLE_DIR)
 	@echo "Bundle created: $(BUNDLE_DIR)"
 
 dist: bundle

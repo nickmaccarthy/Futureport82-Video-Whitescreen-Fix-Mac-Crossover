@@ -11,9 +11,6 @@ struct BottleApplicationService {
     private static let cxbottleBin = URL(
         fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/cxbottle"
     )
-    private static let cxstartBin = URL(
-        fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/cxstart"
-    )
 
     static func addToBottle(
         executablePath: URL,
@@ -58,23 +55,9 @@ struct BottleApplicationService {
                 .replacingOccurrences(of: "/", with: "\\")
         }
 
-        // Create batch file shortcut on desktop
-        let desktopPath = driveC
-            .appendingPathComponent("users/crossover/Desktop")
-        try fm.createDirectory(at: desktopPath, withIntermediateDirectories: true)
-
         let wineDir = (winePath as NSString).deletingLastPathComponent
         let batchContent = "@echo off\ncd /d \"\(wineDir)\"\nstart \"\" \"\(winePath)\"\n"
-        let batchFile = desktopPath.appendingPathComponent("Futureport82.bat")
-
-        do {
-            try batchContent.write(to: batchFile, atomically: true, encoding: .utf8)
-            onOutput("Created batch file shortcut on desktop.\n")
-        } catch {
-            onOutput("Warning: Could not create batch file: \(error.localizedDescription)\n")
-        }
-
-        // Create Start Menu launcher and ask CrossOver to resync menus.
+        // Create Start Menu launcher for manual fallback.
         let startMenuPath = driveC.appendingPathComponent(
             "users/crossover/AppData/Roaming/Microsoft/Windows/Start Menu/Programs"
         )
@@ -87,121 +70,143 @@ struct BottleApplicationService {
             onOutput("Warning: Could not create Start Menu launcher: \(error.localizedDescription)\n")
         }
 
-        await registerApplicationMenuEntry(
+        await createNativeWindowsShortcuts(
             bottlePath: bottlePath,
+            bottleName: bottleName,
             winePath: winePath,
+            onOutput: onOutput
+        )
+        await resyncBottleMenus(
+            bottleName: bottleName,
+            bottlePath: bottlePath,
             onOutput: onOutput
         )
 
         onOutput("Application available at: \(winePath)\n")
-        onOutput("Note: You may need to restart CrossOver or refresh the bottle to see it in the application menu.\n")
 
-        // Shut down wineserver to release locks before CrossOver opens the bottle
+        // Shut down wineserver to release locks before CrossOver rebuilds launchers.
         await MediaFoundationService.shutdownWineserver(
             bottleName: bottleName,
             bottlePath: bottlePath,
             onOutput: onOutput
         )
+
+        await rebuildCrossOverPrograms(onOutput: onOutput)
     }
 
-    private static func registerApplicationMenuEntry(
+    private static func createNativeWindowsShortcuts(
         bottlePath: URL,
+        bottleName: String,
         winePath: String,
         onOutput: @Sendable @escaping (String) -> Void
     ) async {
-        // Match CrossOver's native Start Menu/Desktop path style so the app
-        // entry appears in bottle UI consistently.
-        let startMenuPath = "StartMenu.C^3A_users_crossover_AppData_Roaming_Microsoft_Windows_Start+Menu/Programs/Futureport82.lnk"
-        let desktopPath = "Desktop.C^3A_users_crossover_Desktop/Futureport82.lnk"
-        let legacyStartMenuPath = "StartMenu/Futureport82"
-        let legacyDesktopPath = "Desktop/Futureport82"
-
-        let wrapperScripts = ensureMenuWrapperScripts(
-            bottlePath: bottlePath,
-            winePath: winePath
-        )
-        let commandByPath: [String: String] = [
-            startMenuPath: "\"\(wrapperScripts.startMenu.path)\"",
-            desktopPath: "\"\(wrapperScripts.desktop.path)\""
-        ]
-        let menuPaths = [startMenuPath, desktopPath]
-        var createOK = true
-
-        for legacyPath in [legacyStartMenuPath, legacyDesktopPath] {
-            _ = try? await ShellService.run(
-                executable: cxmenuBin,
-                arguments: ["--bottle", bottlePath.path, "--filter", legacyPath, "--delete"],
-                onOutput: onOutput
-            )
-        }
-
-        for menuPath in menuPaths {
-            // Best-effort cleanup in case a prior entry exists.
-            _ = try? await ShellService.run(
-                executable: cxmenuBin,
-                arguments: ["--bottle", bottlePath.path, "--filter", menuPath, "--delete"],
-                onOutput: onOutput
-            )
-
-            let exitCode = try? await ShellService.run(
-                executable: cxmenuBin,
+        let vbsFile = bottlePath.appendingPathComponent("drive_c/users/crossover/create_fp82_shortcuts.vbs")
+        let winePathEsc = winePath.replacingOccurrences(of: "\\", with: "\\\\")
+        let vbs = """
+        Set oWS = WScript.CreateObject("WScript.Shell")
+        Set oLink = oWS.CreateShortcut("C:\\users\\crossover\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Futureport82.lnk")
+        oLink.TargetPath = "\(winePathEsc)"
+        oLink.WorkingDirectory = "C:\\Program Files\\Futureport82"
+        oLink.Description = "Futureport82"
+        oLink.Save
+        """
+        do {
+            try vbs.write(to: vbsFile, atomically: true, encoding: .utf8)
+            let exitCode = try await ShellService.run(
+                executable: wineBin,
                 arguments: [
-                    "--bottle", bottlePath.path,
-                    "--create", menuPath,
-                    "--type", "raw",
-                    "--description", "Futureport82",
-                    "--command", commandByPath[menuPath] ?? "",
-                    "--mode", "install"
+                    "--bottle", bottleName,
+                    "--cx-app", "cscript.exe",
+                    "//nologo", "C:\\users\\crossover\\create_fp82_shortcuts.vbs"
                 ],
                 onOutput: onOutput
             )
-            if exitCode != 0 {
-                createOK = false
+            if exitCode == 0 {
+                onOutput("Created native Start Menu shortcut (.lnk).\n")
+            } else {
+                onOutput("Warning: shortcut creation returned exit code \(exitCode).\n")
             }
+        } catch {
+            onOutput("Warning: failed to create Windows shortcuts: \(error.localizedDescription)\n")
         }
-
-        let installExitCode = try? await ShellService.run(
-            executable: cxmenuBin,
-            arguments: ["--bottle", bottlePath.path, "--install"],
-            onOutput: onOutput
-        )
-        if createOK && installExitCode == 0 {
-            onOutput("Registered CrossOver application entries (Start Menu + Desktop).\n")
-        } else {
-            onOutput("Warning: Could not fully register CrossOver application menu entry.\n")
-        }
-
-        _ = try? await ShellService.run(
-            executable: cxbottleBin,
-            arguments: ["--bottle", bottlePath.path, "--install"],
-            onOutput: onOutput
-        )
+        try? FileManager.default.removeItem(at: vbsFile)
     }
 
-    private static func ensureMenuWrapperScripts(bottlePath: URL, winePath: String) -> (startMenu: URL, desktop: URL) {
-        let fm = FileManager.default
-        let cxmenuDir = bottlePath.appendingPathComponent("desktopdata/cxmenu")
-        let startDir = cxmenuDir.appendingPathComponent(
-            "StartMenu.C^5E3A_users_crossover_AppData_Roaming_Microsoft_Windows_Start^2BMenu/Programs"
+    private static func resyncBottleMenus(
+        bottleName: String,
+        bottlePath: URL,
+        onOutput: @Sendable @escaping (String) -> Void
+    ) async {
+        _ = try? await ShellService.run(
+            executable: cxmenuBin,
+            arguments: ["--bottle", bottleName, "--sync", "--mode", "install"],
+            onOutput: onOutput
         )
-        let desktopDir = cxmenuDir.appendingPathComponent("Desktop.C^5E3A_users_crossover_Desktop")
+        _ = try? await ShellService.run(
+            executable: cxmenuBin,
+            arguments: ["--bottle", bottleName, "--install"],
+            onOutput: onOutput
+        )
+        _ = try? await ShellService.run(
+            executable: cxbottleBin,
+            arguments: ["--bottle", bottleName, "--install"],
+            onOutput: onOutput
+        )
+        onOutput("Resynced CrossOver menus from native shortcuts.\n")
+    }
 
-        try? fm.createDirectory(at: startDir, withIntermediateDirectories: true)
-        try? fm.createDirectory(at: desktopDir, withIntermediateDirectories: true)
-
-        let startScript = startDir.appendingPathComponent("Futureport82.lnk")
-        let desktopScript = desktopDir.appendingPathComponent("Futureport82.lnk")
-        let escapedWinePath = winePath.replacingOccurrences(of: "\\", with: "\\\\")
+    private static func rebuildCrossOverPrograms(
+        onOutput: @Sendable @escaping (String) -> Void
+    ) async {
         let script = """
-        #!/bin/sh
-        exec "\(cxstartBin.path)" --bottle "\(bottlePath.path)" "\(escapedWinePath)" "$@"
+        on waitForElement(procRef, checkScript, timeoutSeconds)
+            set deadline to (current date) + timeoutSeconds
+            repeat while (current date) is less than deadline
+                tell application "System Events"
+                    tell procRef
+                        if (run script checkScript) then
+                            return true
+                        end if
+                    end tell
+                end tell
+                delay 0.2
+            end repeat
+            return false
+        end waitForElement
+
+        tell application "CrossOver" to activate
+
+        tell application "System Events"
+            tell process "CrossOver"
+                set rebuildReady to my waitForElement(it, "exists menu item \\\"Clear and Rebuild Programs…\\\" of menu 1 of menu bar item \\\"Configure\\\" of menu bar 1", 10)
+                if not rebuildReady then error "CrossOver rebuild menu was not available."
+
+                click menu item "Clear and Rebuild Programs…" of menu 1 of menu bar item "Configure" of menu bar 1
+
+                set confirmReady to my waitForElement(it, "exists button \\\"Rebuild\\\" of window 1", 10)
+                if not confirmReady then error "CrossOver rebuild confirmation did not appear."
+
+                click button "Rebuild" of window 1
+            end tell
+        end tell
         """
 
-        try? script.write(to: startScript, atomically: true, encoding: .utf8)
-        try? script.write(to: desktopScript, atomically: true, encoding: .utf8)
-        try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: startScript.path)
-        try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: desktopScript.path)
-
-        return (startScript, desktopScript)
+        do {
+            onOutput("Requesting CrossOver to clear and rebuild its program launchers...\n")
+            _ = try await ShellService.run(
+                executable: URL(fileURLWithPath: "/usr/bin/open"),
+                arguments: ["-a", "CrossOver"],
+                onOutput: { _ in }
+            )
+            _ = try await ShellService.run(
+                executable: URL(fileURLWithPath: "/usr/bin/osascript"),
+                arguments: ["-e", script],
+                onOutput: onOutput
+            )
+            onOutput("CrossOver program launcher rebuild requested.\n")
+        } catch {
+            onOutput("Warning: Could not trigger CrossOver launcher rebuild automatically: \(error.localizedDescription)\n")
+            onOutput("If the app does not appear immediately in CrossOver, use Configure -> Clear and Rebuild Programs…\n")
+        }
     }
 }

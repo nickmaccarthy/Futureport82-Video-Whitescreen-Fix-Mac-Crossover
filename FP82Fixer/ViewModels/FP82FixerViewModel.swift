@@ -189,18 +189,16 @@ class FP82FixerViewModel {
 
         guard confirm.runModal() == .alertFirstButtonReturn else { return }
 
-        let permissions = PermissionService.checkRequiredPermissions(prompt: true)
-        guard permissions.allGranted else {
-            showMissingPermissionsAlert(status: permissions)
-            appendOutput("Permissions required before running the fix.\n")
+        let permissions = PermissionService.checkRequiredPermissions(prompt: false)
+        if !permissions.allGranted {
+            appendOutput("Permission note: continuing without full automation access.\n")
             if !permissions.accessibilityTrusted {
-                appendOutput("- Enable Accessibility for FP82Fixer in System Settings -> Privacy & Security -> Accessibility.\n")
+                appendOutput("- Accessibility is not currently granted. Wine/CrossOver dialogs may need manual clicks.\n")
             }
             if !permissions.appleEventsTrusted {
-                appendOutput("- Allow FP82Fixer to control System Events when prompted (Automation).\n")
+                appendOutput("- Automation for System Events is not currently granted. CrossOver rebuild may need to be triggered manually.\n")
             }
-            appendOutput("After granting, retry Apply Fix.\n\n")
-            return
+            appendOutput("If Futureport82 does not appear in CrossOver, use Configure -> Clear and Rebuild Programs…\n\n")
         }
 
         runFix(bottle: bottle)
@@ -294,7 +292,8 @@ class FP82FixerViewModel {
         let defaults = UserDefaults.standard
         guard defaults.bool(forKey: firstLaunchKey) == false else { return }
 
-        PermissionService.requestStartupPrompts()
+        // Avoid forcing privacy prompts on first launch. We can still operate with
+        // a manual fallback path, and explicit prompts are less confusing later.
         defaults.set(true, forKey: firstLaunchKey)
     }
 

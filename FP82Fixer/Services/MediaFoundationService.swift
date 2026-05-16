@@ -5,6 +5,9 @@ struct MediaFoundationService {
     private static let wineBin = URL(
         fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/bin/wine"
     )
+    private static let wineserverBin = URL(
+        fileURLWithPath: "/Applications/CrossOver.app/Contents/SharedSupport/CrossOver/CrossOver-Hosted Application/wineserver"
+    )
 
     static func resourceDirectory() throws -> URL {
         guard let url = ResourceBundleLocator.url(forResource: "FixResources", withExtension: nil) else {
@@ -90,15 +93,18 @@ struct MediaFoundationService {
         env["WINEDEBUG"] = "-all"
         env["WINEPREFIX"] = bottlePath.path
 
-        _ = try? await ShellService.run(
-            executable: wineBin,
-            arguments: ["--bottle", bottleName, "--cx-app", "wineserver", "-k"],
+        let killExitCode = try? await ShellService.run(
+            executable: wineserverBin,
+            arguments: ["-k"],
             environment: env,
             onOutput: onOutput
         )
+        if let killExitCode, killExitCode != 0 {
+            onOutput("  wineserver -k returned \(killExitCode); continuing to wait for shutdown.\n")
+        }
         _ = try? await ShellService.run(
-            executable: wineBin,
-            arguments: ["--bottle", bottleName, "--cx-app", "wineserver", "-w"],
+            executable: wineserverBin,
+            arguments: ["-w"],
             environment: env,
             onOutput: onOutput
         )
